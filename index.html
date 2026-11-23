@@ -5386,7 +5386,7 @@ function toggleThemeApp() {
     if(kpiSecLbl) kpiSecLbl.textContent = CFG.name;
   }
 })();
-conqueteLoad();buildKPIs();fillSelects();drawMap();filtersRestore();buildTable();buildCal();buildExpPreview();buildAlerts();ejsLoadConfig();
+/* ACI init is triggered by activateSector() when the user navigates to the ACI sector */
 
 if(!IS_READONLY){var _btnAC=document.getElementById("btn-add-contact-top");if(_btnAC)_btnAC.style.display="";}
 editsLoad();
@@ -6735,16 +6735,7 @@ function buildSecteurTab() {
 /* ═══════════════════════════════════════════════
    ONGLET FÉDÉRATION — buildFedTab()
 ═══════════════════════════════════════════════════ */
-var FED_SECTORS = [
-  {key:'aci', name:"Ateliers Chantiers d'Insertion", short:'ACI', idcc:'IDCC 3016', color:'#E24B4A', emoji:'🏭', url:'app.html',   status:'live',    desc:'IAE · Insertion par l\'activité économique · CDDI'},
-  {key:'ml',  name:'Missions Locales',               short:'ML',  idcc:'IDCC 1261', color:'#185fa5', emoji:'🎓', url:'app-ml.html',status:'soon',    desc:'Accompagnement jeunes · 16-25 ans · Emploi'},
-  {key:'ad',  name:'Aides à Domicile',               short:'AD',  idcc:'IDCC 2111', color:'#1D9E75', emoji:'🏡', url:null,          status:'planned', desc:'SAAD · SSIAD · Services à la personne'},
-  {key:'rq',  name:'Régies de Quartier',             short:'RQ',  idcc:'IDCC 1790', color:'#f57c00', emoji:'🏘️', url:null,          status:'planned', desc:'Développement local · Cohésion sociale · CNLRQ'},
-  {key:'mut', name:'Mutualité',                      short:'MUT', idcc:'IDCC 2256', color:'#7b1fa2', emoji:'🏥', url:null,          status:'planned', desc:'Mutuelles · Protection complémentaire · FNMF'},
-  {key:'ss',  name:'Sécurité Sociale',               short:'SS',  idcc:'',          color:'#0288d1', emoji:'🛡️', url:null,          status:'planned', desc:'CPAM · CARSAT · CAF · URSSAF'},
-  {key:'msa', name:'MSA',                            short:'MSA', idcc:'',          color:'#558b2f', emoji:'🌾', url:null,          status:'planned', desc:'Mutualité Sociale Agricole · Rural'},
-  {key:'ft',  name:'France Travail',                 short:'FT',  idcc:'IDCC 2847', color:'#00695c', emoji:'💼', url:null,          status:'planned', desc:'Emploi · Insertion professionnelle · Ex-Pôle Emploi'}
-];
+/* FED_SECTORS already declared above with hashNav — do not redeclare here */
 
 function buildFedTab() {
   /* Grille des secteurs */
@@ -6754,8 +6745,9 @@ function buildFedTab() {
     FED_SECTORS.forEach(function(s) {
       var statusLabel = s.status === 'live' ? '✅ Application active' : s.status === 'soon' ? '🔧 En préparation' : '📋 Planifié';
       var statusColor = s.status === 'live' ? '#1D9E75' : s.status === 'soon' ? '#f57c00' : 'var(--tx3)';
-      var clickable = s.url ? 'onclick="window.location.href=\''+s.url+'\'" style="cursor:pointer" title="Ouvrir '+s.name+'"' : '';
-      h += '<div '+clickable+' style="background:var(--bg2);border-radius:var(--rl);padding:14px 16px;border:2px solid '+(s.status==='live'?s.color:'var(--bd)')+'transition:.15s;'+(s.url?'':'opacity:.7')+'\">';
+      var nav = s.hashNav || s.url;
+      var clickable = nav ? 'onclick="'+(s.hashNav?'goView(\''+s.hashNav+'\')':'window.location.href=\''+s.url+'\'')+'" style="cursor:pointer" title="Ouvrir '+s.name+'"' : '';
+      h += '<div '+clickable+' style="background:var(--bg2);border-radius:var(--rl);padding:14px 16px;border:2px solid '+(s.status==='live'?s.color:'var(--bd)')+'transition:.15s;'+(nav?'':'opacity:.7')+'\">';
       h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">';
       h += '<span style="font-size:22px">'+s.emoji+'</span>';
       h += '<div><div style="font-size:13px;font-weight:700;color:var(--tx)">'+s.short+'</div>';
@@ -6764,7 +6756,7 @@ function buildFedTab() {
       h += '</div>';
       h += '<div style="font-size:11px;color:var(--tx2);margin-bottom:6px;line-height:1.4">'+s.desc+'</div>';
       h += '<div style="font-size:10px;font-weight:700;color:'+statusColor+'">'+statusLabel+'</div>';
-      if (s.url) h += '<div style="font-size:9px;color:'+s.color+';margin-top:4px;font-weight:600">→ Accéder à l\'application</div>';
+      if (nav) h += '<div style="font-size:9px;color:'+s.color+';margin-top:4px;font-weight:600">→ Accéder à l\'application</div>';
       h += '</div>';
     });
     grid.innerHTML = h;
