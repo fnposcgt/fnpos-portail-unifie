@@ -1,5 +1,5 @@
-/* FNPOS-CGT Service Worker v4 — unified portail */
-var CACHE = 'fnpos-unified-v4';
+/* FNPOS-CGT Service Worker v5 — unified portail — network-first */
+var CACHE = 'fnpos-unified-v5';
 var STATIC = ['./'];
 
 self.addEventListener('install', function(e) {
@@ -23,16 +23,16 @@ self.addEventListener('fetch', function(e) {
   var url = e.request.url;
   /* Pass through Supabase API calls */
   if (url.indexOf('supabase.co') >= 0) return;
+  /* NETWORK-FIRST: always try network, fall back to cache only if offline */
   e.respondWith(
-    caches.match(e.request).then(function(cached) {
-      var fetched = fetch(e.request).then(function(res) {
-        if (res && res.status === 200) {
-          var clone = res.clone();
-          caches.open(CACHE).then(function(c) { c.put(e.request, clone); });
-        }
-        return res;
-      }).catch(function() { return cached; });
-      return cached || fetched;
+    fetch(e.request).then(function(res) {
+      if (res && res.status === 200) {
+        var clone = res.clone();
+        caches.open(CACHE).then(function(c) { c.put(e.request, clone); });
+      }
+      return res;
+    }).catch(function() {
+      return caches.match(e.request);
     })
   );
 });
