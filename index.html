@@ -1942,15 +1942,7 @@ function updatePortalSyncStatus(state) {
   else                        { label.textContent = 'Erreur sync'; }
 }
 
-/* ── THÈME JOUR/NUIT ── */
-}
-/* Restaurer le thème enregistré (partagé avec les apps secteur) */
-(function() {
-  try {
-    var saved = localStorage.getItem('fnpos_theme');
-    if (saved === 'light') {
-      document.body.classList.add('light');
-      
+/* ── THÈME JOUR/NUIT : géré dans DOMContentLoaded (voir bas du fichier) ── */
 
 /* ═══ MAIN APP JS ═══ */
 /* (from app-aci.html, modified for multi-sector) */
