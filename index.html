@@ -6885,6 +6885,221 @@ window.addEventListener('hashchange', function() {
   if (hash !== _currentView) goView(hash);
 });
 
+/* ═══════════════════════════════════════════
+   FICHE STRUCTURE — modal détaillé
+   ═══════════════════════════════════════════ */
+(function(){
+  /* Créer le DOM du modal une seule fois */
+  function ensureFicheModal(){
+    if(document.getElementById('fiche-overlay')) return;
+    var ov = document.createElement('div');
+    ov.id = 'fiche-overlay';
+    ov.innerHTML =
+      '<div id="fiche-modal">'+
+        '<div id="fiche-hdr" style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--bd);position:sticky;top:0;background:var(--bg);z-index:1">'+
+          '<div>'+
+            '<div id="fiche-nom" style="font-size:15px;font-weight:800;color:var(--tx)"></div>'+
+            '<div id="fiche-sub" style="font-size:11px;color:var(--tx3);margin-top:2px"></div>'+
+          '</div>'+
+          '<div style="display:flex;gap:8px;align-items:center">'+
+            '<button id="fiche-edit-btn" onclick="editStructFromFiche()" style="display:none;font-size:11px;padding:4px 10px;border:1px solid var(--bd2);border-radius:6px;cursor:pointer;background:var(--bg);color:#185fa5;font-weight:600">✏️ Modifier</button>'+
+            '<button id="fiche-close" onclick="closeFiche()">✕</button>'+
+          '</div>'+
+        '</div>'+
+        '<div id="fiche-body"></div>'+
+      '</div>';
+    ov.addEventListener('click', function(e){ if(e.target===ov) closeFiche(); });
+    document.body.appendChild(ov);
+  }
+
+  function fmtDate(d){
+    if(!d) return '—';
+    if(d.indexOf('-')>0){
+      var p=d.split('-');
+      return p[2]+'/'+p[1]+'/'+p[0];
+    }
+    return d;
+  }
+  function fmtNb(n){ return n?String(n).replace(/\B(?=(\d{3})+(?!\d))/g,' '):'—'; }
+
+  window.openFiche = function(siret){
+    ensureFicheModal();
+    var s = null;
+    for(var i=0;i<STRUCTS.length;i++){ if(STRUCTS[i].si===siret){s=STRUCTS[i];break;} }
+    if(!s){ showEditToast('⚠ Structure introuvable','#E24B4A'); return; }
+    FICHE_CURRENT_SIRET = siret;
+
+    /* Entête */
+    document.getElementById('fiche-nom').textContent = s.n || siret;
+    var subParts = [];
+    if(s.si) subParts.push(s.si);
+    if(s.ts) subParts.push(s.ts);
+    if(s.cc==='OUI') subParts.push('CCN ✓');
+    document.getElementById('fiche-sub').textContent = subParts.join(' · ');
+
+    /* Bouton modifier */
+    var editBtn = document.getElementById('fiche-edit-btn');
+    if(editBtn) editBtn.style.display = IS_READONLY ? 'none' : 'inline-block';
+
+    /* ── Sections ── */
+    var h = '';
+
+    /* Contact */
+    h += '<div style="padding:14px 20px 0">';
+    h += '<div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Contact</div>';
+    h += '<div style="display:grid;grid-template-columns:auto 1fr;gap:5px 12px;font-size:12px">';
+    if(s.ad||s.cp||s.v){
+      var adr = [s.ad,s.cp,s.v].filter(Boolean).join(', ');
+      h += '<span style="color:var(--tx3)">📍</span><span>'+adr+'</span>';
+    }
+    if(s.tl) h += '<span style="color:var(--tx3)">📞</span><span><a href="tel:'+s.tl+'" style="color:var(--tx);text-decoration:none">'+s.tl+'</a></span>';
+    if(s.em) h += '<span style="color:var(--tx3)">✉️</span><span><a href="mailto:'+s.em+'" style="color:#185fa5">'+s.em+'</a></span>';
+    if(s.web) h += '<span style="color:var(--tx3)">🌐</span><span><a href="'+s.web+'" target="_blank" rel="noopener" style="color:#185fa5;word-break:break-all">'+s.web+'</a></span>';
+    if(s.fi) h += '<span style="color:var(--tx3)">📋</span><span><a href="'+s.fi+'" target="_blank" rel="noopener" style="color:#185fa5">Fiche Inclusion</a></span>';
+    h += '</div></div>';
+
+    /* Caractéristiques */
+    h += '<div style="padding:14px 20px 0">';
+    h += '<div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Caractéristiques</div>';
+    h += '<div style="display:flex;flex-wrap:wrap;gap:6px">';
+    var chips = [
+      s.r ? '🗺 '+s.r : null,
+      s.d ? 'Dép. '+s.d : null,
+      s.nb ? '👥 '+s.nb+' sal.' : null,
+      s.ef ? s.ef : null,
+      s.an ? 'Créé en '+s.an : null,
+      s.ag==='OUI' ? 'Agréé ✓' : null,
+      s.cc==='OUI' ? 'CCN ACI' : 'Sans CCN'
+    ];
+    for(var ci=0;ci<chips.length;ci++){
+      if(chips[ci]) h += '<span style="font-size:11px;padding:3px 8px;background:var(--bg2);border-radius:20px;color:var(--tx2)">'+chips[ci]+'</span>';
+    }
+    h += '</div></div>';
+
+    /* Élections */
+    var hasElec = s.de || s.pr || gi(s,'in')>0;
+    if(hasElec){
+      h += '<div style="padding:14px 20px 0">';
+      h += '<div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Élections CSE</div>';
+      h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
+
+      /* Dernière */
+      h += '<div style="background:var(--bg2);border-radius:8px;padding:10px">';
+      h += '<div style="font-size:10px;color:var(--tx3);margin-bottom:4px">Dernière élection</div>';
+      h += '<div style="font-size:13px;font-weight:700;color:var(--tx)">'+fmtDate(s.de)+'</div>';
+      var insc = gi(s,'in'), pa = gf(s,'pa');
+      if(insc>0){
+        h += '<div style="font-size:11px;color:var(--tx2);margin-top:4px">'+fmtNb(insc)+' inscrits';
+        if(pa>0) h += ' &bull; '+pa.toFixed(1)+'% participation';
+        h += '</div>';
+      }
+      if(s.dm) h += '<div style="font-size:10px;color:var(--tx3);margin-top:2px">Mandat '+s.dm+' ans</div>';
+      h += '</div>';
+
+      /* Prochaine */
+      var prColor = '#888';
+      if(s.pr){
+        var prTs = s.pr.indexOf('-')>0 ? new Date(s.pr).getTime() : 0;
+        var nowTs = Date.now();
+        var daysDiff = Math.round((prTs-nowTs)/86400000);
+        if(daysDiff<0) prColor='var(--tx3)';
+        else if(daysDiff<=30) prColor='#E24B4A';
+        else if(daysDiff<=90) prColor='#EF9F27';
+        else prColor='#2E7D32';
+      }
+      h += '<div style="background:var(--bg2);border-radius:8px;padding:10px">';
+      h += '<div style="font-size:10px;color:var(--tx3);margin-bottom:4px">Prochaine élection</div>';
+      h += '<div style="font-size:13px;font-weight:700;color:'+prColor+'">'+fmtDate(s.pr)+'</div>';
+      if(s.pr){
+        var prTs2 = s.pr.indexOf('-')>0 ? new Date(s.pr).getTime() : 0;
+        var diff2 = Math.round((prTs2-Date.now())/86400000);
+        if(diff2>=0) h += '<div style="font-size:10px;color:'+prColor+';margin-top:2px">dans '+diff2+' j</div>';
+        else h += '<div style="font-size:10px;color:var(--tx3);margin-top:2px">il y a '+Math.abs(diff2)+' j</div>';
+      }
+      h += '</div>';
+      h += '</div>';
+
+      /* Résultats syndicaux */
+      var totalVoix = 0;
+      var synKeys = ['cg','cf','fo','ck','so'];
+      var synLabels = {cg:'CGT',cf:'CFDT',fo:'FO',ck:'CFE-CGC',so:'Solidaires'};
+      var synColors = {cg:'#E24B4A',cf:'#185fa5',fo:'#EF9F27',ck:'#5C5C5C',so:'#E55100'};
+      var synVoix = {};
+      for(var ki=0;ki<synKeys.length;ki++){
+        synVoix[synKeys[ki]] = gi(s, synKeys[ki]);
+        totalVoix += synVoix[synKeys[ki]];
+      }
+      if(totalVoix>0){
+        h += '<div style="margin-top:10px">';
+        h += '<div style="font-size:10px;color:var(--tx3);margin-bottom:6px">Résultats syndicaux</div>';
+        /* Tri par voix */
+        var sorted = synKeys.slice().sort(function(a,b){ return synVoix[b]-synVoix[a]; });
+        for(var si2=0;si2<sorted.length;si2++){
+          var k=sorted[si2], v=synVoix[k];
+          if(!v) continue;
+          var pct = Math.round(v/totalVoix*100);
+          var isGagnant = s.ga && s.ga.indexOf(synLabels[k])>=0;
+          h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">';
+          h += '<span style="font-size:10px;width:52px;text-align:right;color:'+synColors[k]+';font-weight:'+(isGagnant?'800':'500')+'">'+synLabels[k]+(isGagnant?' ★':'')+'</span>';
+          h += '<div style="flex:1;height:14px;background:var(--bg3);border-radius:7px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+synColors[k]+';border-radius:7px"></div></div>';
+          h += '<span style="font-size:10px;width:36px;color:var(--tx2)">'+pct+'%</span>';
+          h += '<span style="font-size:10px;width:30px;color:var(--tx3)">'+v+'</span>';
+          h += '</div>';
+        }
+        h += '</div>';
+      }
+      h += '</div>';
+    }
+
+    /* Adhérents CGT */
+    var si3 = s.si || '';
+    var adhLst = (typeof ADHERENTS !== 'undefined' && ADHERENTS[si3]) ? ADHERENTS[si3] : [];
+    var adhActifs = adhLst.filter(function(a){ return a.arc!=='OUI'; });
+    if(adhActifs.length>0){
+      h += '<div style="padding:14px 20px 0">';
+      h += '<div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Adhérents CGT ('+adhActifs.length+')</div>';
+      h += '<div style="background:rgba(226,75,74,.06);border-left:3px solid #E24B4A;border-radius:0 8px 8px 0;padding:8px 12px">';
+      for(var ai2=0;ai2<adhActifs.length;ai2++){
+        var a = adhActifs[ai2];
+        var nm = [(a.pr||''), (a.nm||a.n||'')].filter(Boolean).join(' ');
+        h += '<div style="font-size:11px;padding:3px 0;border-bottom:1px solid rgba(226,75,74,.12)">'+nm;
+        if(a.mt) h += ' <span style="font-size:9px;color:var(--tx3)">['+a.mt+']</span>';
+        h += '</div>';
+      }
+      h += '</div></div>';
+    }
+
+    /* Carte mini si lat/lon */
+    if(s.la && s.lo){
+      h += '<div style="padding:14px 20px 0">';
+      h += '<div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Localisation</div>';
+      h += '<a href="https://maps.google.com/?q='+s.la+','+s.lo+'" target="_blank" rel="noopener" style="font-size:11px;color:#185fa5">📍 Voir sur Google Maps ('+s.la.toFixed(4)+', '+s.lo.toFixed(4)+')</a>';
+      h += '</div>';
+    }
+
+    h += '<div style="height:20px"></div>';
+
+    document.getElementById('fiche-body').innerHTML = h;
+    document.getElementById('fiche-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.closeFiche = function(){
+    var ov = document.getElementById('fiche-overlay');
+    if(ov) ov.classList.remove('open');
+    document.body.style.overflow = '';
+    FICHE_CURRENT_SIRET = '';
+  };
+
+  /* Fermer avec Échap */
+  document.addEventListener('keydown', function(e){
+    if(e.key==='Escape'){
+      var ov=document.getElementById('fiche-overlay');
+      if(ov&&ov.classList.contains('open')){ closeFiche(); e.stopPropagation(); }
+    }
+  }, true);
+})();
+
 </script>
 </body>
 </html>
