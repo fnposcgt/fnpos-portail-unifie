@@ -6778,9 +6778,15 @@ function buildFedTab() {
 }
 
 /* ═══ BOOT ═══ */
+
+/* Populate portal grids immediately (DOM is ready at script-parse time) */
+(function() {
+  try { if (typeof buildPortal === 'function') buildPortal(); } catch(e) {}
+})();
+
 document.addEventListener('DOMContentLoaded', function() {
   /* Build global nav */
-  buildGNav();
+  try { buildGNav(); } catch(e) {}
 
   /* Apply saved theme */
   try {
@@ -6797,12 +6803,17 @@ document.addEventListener('DOMContentLoaded', function() {
   } catch(e) {}
 
   /* IS_READONLY via URL param */
-  IS_READONLY = (window.location.search.indexOf('readonly') >= 0);
+  try { IS_READONLY = (window.location.search.indexOf('readonly') >= 0); } catch(e) {}
   if (IS_READONLY) try { document.body.classList.add('readonly'); } catch(e) {}
 
   /* Navigate to hash or default to portail */
-  var hash = window.location.hash.slice(1) || 'portail';
-  goView(hash);
+  try {
+    var hash = window.location.hash.slice(1) || 'portail';
+    goView(hash);
+  } catch(e) {
+    /* Fallback: at minimum show the portal grids */
+    try { buildPortal(); } catch(e2) {}
+  }
 });
 
 /* Hash-change navigation */
