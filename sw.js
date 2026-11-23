@@ -1,5 +1,5 @@
-/* FNPOS-CGT Service Worker v3 — unified portail */
-var CACHE = 'fnpos-unified-v3';
+/* FNPOS-CGT Service Worker v4 — unified portail */
+var CACHE = 'fnpos-unified-v4';
 var STATIC = ['./'];
 
 self.addEventListener('install', function(e) {
