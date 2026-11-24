@@ -1570,6 +1570,14 @@ function tryBiometric(){
 <!-- EXPORT -->
 <div class="tp" id="tp-export" style="display:none!important"></div>
 
+<!-- ═══ ONGLET SECTEUR ═══ -->
+<div class="tp" id="tp-secteur">
+  <div id="secteur-content" style="padding:16px 8px 32px;">
+    <!-- rempli dynamiquement par buildSecteur() -->
+    <div style="color:var(--tx2);text-align:center;padding:40px 0;">Chargement…</div>
+  </div>
+</div>
+
 </div>
 <div id="tip"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -3279,8 +3287,127 @@ function goTab(name){
   if(name==="conquete")window.setTimeout(renderConquete,80);
   if(name==="outils")window.setTimeout(renderBiblioTab,80);
   if(name==="carte")window.setTimeout(function(){ drawMap(); if(_lfMap) _lfMap.invalidateSize(); },150);
+  if(name==="secteur")window.setTimeout(buildSecteur,80);
   try{localStorage.setItem('fnpos_tab_'+SEC,name);}catch(e){}
 }
+/* ═══ ONGLET SECTEUR — ACI ═══ */
+function buildSecteur(){
+  var el=document.getElementById('secteur-content');
+  if(!el) return;
+  if(typeof buildGS==='function') buildGS();
+  var gs=GS||{};
+  var nb      = gs.nb||0;
+  var nbElec  = gs.nb_elections||0;
+  var insc    = gs.total_insc||0;
+  var vot     = gs.total_votants||0;
+  var part    = insc>0 ? Math.round(vot/insc*100) : 0;
+  /* Adhérents CGT : compter dans ACI_ADHERENTS si disponible, sinon total_cgt */
+  var adh=0;
+  if(typeof ACI_ADHERENTS!=='undefined'&&ACI_ADHERENTS&&ACI_ADHERENTS.length){
+    adh=ACI_ADHERENTS.length;
+  } else {
+    adh=gs.total_cgt||0;
+  }
+  function fmt(n){ return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,' '); }
+
+  el.innerHTML=
+  /* ── KPIs ── */
+  '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;">'+
+    _skpi('🏭','Structures',fmt(nb),'ACI en France')+
+    _skpi('📊','Avec élections',fmt(nbElec),'ont organisé des élections DP')+
+    _skpi('👥','Inscrits',fmt(insc),'salariés inscrits sur les listes')+
+    _skpi('📈','Participation',part+'%','aux dernières élections')+
+    _skpi('✊','Adhérents CGT',fmt(adh),'membres CGT recensés')+
+  '</div>'+
+
+  /* ── Qu'est-ce qu'un ACI ── */
+  '<div style="background:var(--bg2,#1e2533);border-radius:12px;padding:16px 20px;margin-bottom:16px;">'+
+    '<h3 style="margin:0 0 10px;font-size:1em;color:var(--acc,#E24B4A);">🔎 Qu\'est-ce qu\'un ACI ?</h3>'+
+    '<p style="margin:0;font-size:.88em;line-height:1.6;color:var(--tx1);">'+
+      'Un <strong>Atelier Chantier d\'Insertion</strong> (ACI) est une structure de l\'Insertion par l\'Activité Économique (IAE). '+
+      'Il permet à des personnes éloignées de l\'emploi de retrouver une activité professionnelle dans le cadre d\'un parcours individualisé. '+
+      'Les ACI emploient des <em>salariés en insertion</em> (contrats aidés CDDI) encadrés par des professionnels permanents. '+
+      'Ils sont conventionnés par l\'État et cofinancés par le Conseil Départemental. '+
+      'La convention collective nationale IDCC 3016 s\'applique aux personnels permanents.'+
+    '</p>'+
+  '</div>'+
+
+  /* ── La branche ── */
+  '<div style="background:var(--bg2,#1e2533);border-radius:12px;padding:16px 20px;margin-bottom:16px;">'+
+    '<h3 style="margin:0 0 12px;font-size:1em;color:var(--acc,#E24B4A);">📄 La branche — IDCC 3016</h3>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:8px;">'+
+      _slink('CCN ACI','https://www.legifrance.gouv.fr/conv_coll/id/KALICONT000039099993/')+
+      _slink('Avenant 39','https://www.legifrance.gouv.fr/conv_coll/id/KALICONT000039099993/')+
+      _slink('CPPNI','https://travail-emploi.gouv.fr/dialogue-social/la-negociation-collective/article/les-commissions-paritaires-permanentes-de-negociation-et-d-interpretation-cppni')+
+      _slink('CPNEF','https://cpnef-iae.fr/')+
+      _slink('UNIFAF / OPCO Santé','https://www.opco-sante.fr/')+
+      _slink('Données branche','https://www.legifrance.gouv.fr/conv_coll/id/KALICONT000039099993/')+
+    '</div>'+
+  '</div>'+
+
+  /* ── Représentativité ── */
+  '<div style="background:var(--bg2,#1e2533);border-radius:12px;padding:16px 20px;margin-bottom:16px;">'+
+    '<h3 style="margin:0 0 12px;font-size:1em;color:var(--acc,#E24B4A);">🗳️ Représentativité syndicale — Résultats 2024 (IDCC 3016)</h3>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:10px;">'+
+      _srepr('CFDT','44,43%',false,'#1a549e')+
+      _srepr('CGT', '34,59%',true, '#E24B4A')+
+      _srepr('FO',  '11,81%',false,'#f5a623')+
+      _srepr('Solidaires','9,17%',false,'#6c757d')+
+    '</div>'+
+    '<p style="margin:12px 0 0;font-size:.78em;color:var(--tx3);">Source : Arrêté de représentativité syndicale — DGT/Ministère du Travail · Résultats 2024</p>'+
+  '</div>'+
+
+  /* ── Contact FNPOS-CGT ── */
+  '<div style="background:var(--bg2,#1e2533);border-radius:12px;padding:16px 20px;margin-bottom:16px;">'+
+    '<h3 style="margin:0 0 12px;font-size:1em;color:var(--acc,#E24B4A);">✊ CGT ACI — FNPOS-CGT</h3>'+
+    '<p style="margin:0 0 8px;font-size:.88em;color:var(--tx1);">'+
+      '<strong>Denis PERREUX</strong> — Animateur National CGT ACI'+
+    '</p>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:8px;">'+
+      _slink('🌐 Page dédiée ACI','https://orgasociaux.cgt.fr/federation/secteurs/ateliers-chantiers-dinsertion/')+
+      _slink('📧 dperreux@orgasociaux.cgt.fr','mailto:dperreux@orgasociaux.cgt.fr')+
+      _slink('📞 06 64 30 49 42','tel:+33664304942')+
+    '</div>'+
+  '</div>'+
+
+  /* ── Liens utiles ── */
+  '<div style="background:var(--bg2,#1e2533);border-radius:12px;padding:16px 20px;margin-bottom:8px;">'+
+    '<h3 style="margin:0 0 12px;font-size:1em;color:var(--acc,#E24B4A);">🔗 Liens utiles</h3>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:8px;">'+
+      _slink('CCN ACI — Légifrance','https://www.legifrance.gouv.fr/conv_coll/id/KALICONT000039099993/')+
+      _slink('Structures ACI (emplois-inclusion)','https://emplois.inclusion.beta.gouv.fr/siae/?type=ACI')+
+      _slink('Chantier École','https://www.chantierecole.org/')+
+      _slink('IAE — données nationales','https://www.gouvernement.fr/insertion-par-l-activite-economique')+
+      _slink('FNPOS-CGT','https://orgasociaux.cgt.fr/')+
+    '</div>'+
+  '</div>';
+}
+
+function _skpi(icon,label,val,sub){
+  return '<div style="flex:1 1 130px;min-width:120px;background:var(--bg3,#263045);border-radius:10px;padding:12px 14px;text-align:center;">'+
+    '<div style="font-size:1.5em;margin-bottom:4px;">'+icon+'</div>'+
+    '<div style="font-size:.78em;color:var(--tx2);margin-bottom:4px;">'+label+'</div>'+
+    '<div style="font-size:1.35em;font-weight:700;color:var(--tx1);">'+val+'</div>'+
+    '<div style="font-size:.7em;color:var(--tx3);margin-top:4px;">'+sub+'</div>'+
+  '</div>';
+}
+function _srepr(org,pct,isCgt,color){
+  var border=isCgt?'2px solid '+color:'1px solid var(--brd,#334)';
+  var bg=isCgt?'rgba(226,75,74,.12)':'var(--bg3,#263045)';
+  return '<div style="flex:1 1 100px;min-width:90px;background:'+bg+';border:'+border+';border-radius:10px;padding:12px 10px;text-align:center;">'+
+    '<div style="font-size:.82em;font-weight:600;color:'+color+';margin-bottom:6px;">'+org+'</div>'+
+    '<div style="font-size:1.3em;font-weight:700;color:var(--tx1);">'+pct+'</div>'+
+    (isCgt?'<div style="font-size:.7em;margin-top:4px;color:'+color+';">▶ FNPOS-CGT</div>':'')+
+  '</div>';
+}
+function _slink(label,href){
+  return '<a href="'+href+'" target="_blank" rel="noopener" '+
+    'style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;'+
+    'background:var(--bg3,#263045);color:var(--tx1);text-decoration:none;font-size:.82em;'+
+    'border:1px solid var(--brd,#334);transition:opacity .15s;" '+
+    'onmouseover="this.style.opacity=\'.75\'" onmouseout="this.style.opacity=\'1\'">'+label+'</a>';
+}
+
 var cqPage=0, cqPageSize=25;
 var ududPage=0, ududPageSize=25;
 var conqueteStatus = {};
