@@ -7323,28 +7323,63 @@ window.addEventListener('hashchange', function() {
     if(s.r && typeof CONTACTS_BY_REGION !== 'undefined' && CONTACTS_BY_REGION[s.r]){
       var rCont = CONTACTS_BY_REGION[s.r];
       var rRefts = rCont.referents || [];
-      var rResps = rCont.responsables || [];
       var rMembs = rCont.membres_cef || [];
-      var allReg = rRefts.length+rResps.length+rMembs.length;
+      /* Responsables : par ancienne région si disponible, sinon fallback nouvelle région */
+      var ancrData = (typeof RESPONSABLES_ANCIENNES_REGIONS !== 'undefined' && RESPONSABLES_ANCIENNES_REGIONS[s.r]) ? RESPONSABLES_ANCIENNES_REGIONS[s.r] : null;
+      var allReg = rRefts.length + rMembs.length + (ancrData ? ancrData.reduce(function(acc,g){return acc+g.responsables.length;},0) : (rCont.responsables||[]).length);
       if(allReg > 0){
         h += '<div style="padding:14px 20px 0">';
         h += '<div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Responsables CGT — '+s.r+'</div>';
         h += '<div style="display:flex;flex-direction:column;gap:4px">';
-        var fRoles=[
-          {key:'referents',   label:'Référent groupe élections', color:'#E24B4A', list:rRefts},
-          {key:'membres_cef', label:'Élu·e CEF',                 color:'#185fa5', list:rMembs},
-          {key:'responsables',label:'Responsable de région',     color:'#0f6e56', list:rResps}
-        ];
-        for(var rgi=0;rgi<fRoles.length;rgi++){
-          var grp=fRoles[rgi];
-          for(var rpi=0;rpi<grp.list.length;rpi++){
-            var rp=grp.list[rpi];
-            if(!rp.nom)continue;
+        /* Référents groupe élections (niveau nouvelle région) */
+        for(var rgi=0;rgi<rRefts.length;rgi++){
+          var rp=rRefts[rgi]; if(!rp.nom)continue;
+          h += '<div style="font-size:11px;padding:4px 0;border-bottom:1px solid var(--bd2);display:flex;align-items:center;gap:8px;flex-wrap:wrap">';
+          h += '<span style="font-size:9px;background:#E24B4A;color:#fff;padding:1px 7px;border-radius:8px;flex-shrink:0;white-space:nowrap">Référent groupe élections</span>';
+          h += '<span style="font-weight:600;color:var(--tx)">'+rp.nom+'</span>';
+          if(rp.tel) h += '<a href="tel:'+rp.tel+'" style="font-size:10px;color:#E24B4A;text-decoration:none">&#9990; '+rp.tel+'</a>';
+          if(rp.email) h += '<a href="mailto:'+rp.email+'" style="font-size:10px;color:#E24B4A;text-decoration:none">&#9993; '+rp.email+'</a>';
+          h += '</div>';
+        }
+        /* Membres CEF (niveau nouvelle région) */
+        for(var cgi=0;cgi<rMembs.length;cgi++){
+          var rp=rMembs[cgi]; if(!rp.nom)continue;
+          h += '<div style="font-size:11px;padding:4px 0;border-bottom:1px solid var(--bd2);display:flex;align-items:center;gap:8px;flex-wrap:wrap">';
+          h += '<span style="font-size:9px;background:#185fa5;color:#fff;padding:1px 7px;border-radius:8px;flex-shrink:0;white-space:nowrap">Élu·e CEF</span>';
+          h += '<span style="font-weight:600;color:var(--tx)">'+rp.nom+'</span>';
+          if(rp.tel) h += '<a href="tel:'+rp.tel+'" style="font-size:10px;color:#185fa5;text-decoration:none">&#9990; '+rp.tel+'</a>';
+          if(rp.email) h += '<a href="mailto:'+rp.email+'" style="font-size:10px;color:#185fa5;text-decoration:none">&#9993; '+rp.email+'</a>';
+          h += '</div>';
+        }
+        /* Responsables par ancienne région */
+        if(ancrData && ancrData.length){
+          for(var agi=0;agi<ancrData.length;agi++){
+            var aGrp=ancrData[agi];
+            if(!aGrp.responsables||!aGrp.responsables.length)continue;
+            /* Sous-titre ancienne région si la nouvelle en contient plusieurs */
+            if(ancrData.length>1){
+              h += '<div style="font-size:9px;font-weight:700;color:#0f6e56;text-transform:uppercase;letter-spacing:.5px;padding-top:6px;padding-bottom:2px">'+aGrp.ancien+'</div>';
+            }
+            for(var rpi2=0;rpi2<aGrp.responsables.length;rpi2++){
+              var rp=aGrp.responsables[rpi2]; if(!rp.nom)continue;
+              h += '<div style="font-size:11px;padding:4px 0;border-bottom:1px solid var(--bd2);display:flex;align-items:center;gap:8px;flex-wrap:wrap">';
+              h += '<span style="font-size:9px;background:#0f6e56;color:#fff;padding:1px 7px;border-radius:8px;flex-shrink:0;white-space:nowrap">Responsable de région</span>';
+              h += '<span style="font-weight:600;color:var(--tx)">'+rp.nom+'</span>';
+              if(rp.tel) h += '<a href="tel:'+rp.tel+'" style="font-size:10px;color:#0f6e56;text-decoration:none">&#9990; '+rp.tel+'</a>';
+              if(rp.email) h += '<a href="mailto:'+rp.email+'" style="font-size:10px;color:#0f6e56;text-decoration:none">&#9993; '+rp.email+'</a>';
+              h += '</div>';
+            }
+          }
+        } else {
+          /* Fallback : responsables depuis CONTACTS_BY_REGION */
+          var fbResps = rCont.responsables || [];
+          for(var fbi=0;fbi<fbResps.length;fbi++){
+            var rp=fbResps[fbi]; if(!rp.nom)continue;
             h += '<div style="font-size:11px;padding:4px 0;border-bottom:1px solid var(--bd2);display:flex;align-items:center;gap:8px;flex-wrap:wrap">';
-            h += '<span style="font-size:9px;background:'+grp.color+';color:#fff;padding:1px 7px;border-radius:8px;flex-shrink:0;white-space:nowrap">'+grp.label+'</span>';
+            h += '<span style="font-size:9px;background:#0f6e56;color:#fff;padding:1px 7px;border-radius:8px;flex-shrink:0;white-space:nowrap">Responsable de région</span>';
             h += '<span style="font-weight:600;color:var(--tx)">'+rp.nom+'</span>';
-            if(rp.tel) h += '<a href="tel:'+rp.tel+'" style="font-size:10px;color:'+grp.color+';text-decoration:none">&#9990; '+rp.tel+'</a>';
-            if(rp.email) h += '<a href="mailto:'+rp.email+'" style="font-size:10px;color:'+grp.color+';text-decoration:none">&#9993; '+rp.email+'</a>';
+            if(rp.tel) h += '<a href="tel:'+rp.tel+'" style="font-size:10px;color:#0f6e56;text-decoration:none">&#9990; '+rp.tel+'</a>';
+            if(rp.email) h += '<a href="mailto:'+rp.email+'" style="font-size:10px;color:#0f6e56;text-decoration:none">&#9993; '+rp.email+'</a>';
             h += '</div>';
           }
         }
