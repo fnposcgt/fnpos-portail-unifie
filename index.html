@@ -4754,8 +4754,9 @@ function _renderDeptLayer(gj){
   _lfAdhLayer=L.layerGroup(adhMarkers).addTo(_lfMap);
 }
 function showPanel(name,code,dk,ai){
-  /* Mémoriser les sirets du panneau pour auto-ouverture de fiche */
-  _panelStructsSi=(dk.structs||[]).map(function(s){return s.si||s.siret||"";}).filter(Boolean);
+  /* Lookup nom→siret depuis STRUCTS complets (les RS structs n'ont pas de SIRET) */
+  var _nsi={};
+  for(var _i=0;_i<STRUCTS.length;_i++){var _nn=(STRUCTS[_i].n||'').toLowerCase().trim();if(!_nsi[_nn])_nsi[_nn]=STRUCTS[_i].si||'';}
   document.getElementById("panel-empty").style.display="none";document.getElementById("panel-detail").style.display="block";
   document.getElementById("pd-title").textContent=name;
   document.getElementById("pd-sub").textContent=dk.count+" structure"+(dk.count>1?"s":"")+(dk.insc>0?" \u00b7 "+fmt(dk.insc)+" inscrits":"");
@@ -4773,10 +4774,15 @@ function showPanel(name,code,dk,ai){
   for(var i=0;i<UK.length;i++){var v=dk[UK[i]]||0;if(!v)continue;var p=Math.round(v/tv*100);uh+='<div class="urow"><span class="unm">'+ULN[UK[i]]+'</span><div class="utr"><div class="ufill" style="width:'+p+'%;background:'+UC[UK[i]]+'"></div></div><span class="upc">'+p+'%</span><span class="uvc">'+fmt(v)+'</span></div>';}
   document.getElementById("pd-unions").innerHTML=uh||'<div style="font-size:11px;color:var(--tx3)">Aucun r\u00e9sultat syndical.</div>';
   var structs=dk.structs||[];var sh="";
+  /* Collecter les sirets pour auto-ouverture (ptab) */
+  _panelStructsSi=[];
   for(var i=0;i<structs.length;i++){
     var s=structs[i];
     var nom=s.nom||s.n||"";var ville=s.ville||s.v||"";var dept=s.dept||s.d||"";
-    var insc=gi(s,"in")||gi(s,"insc");var gan=g(s,"ga")||g(s,"gagnant");var proch=g(s,"pr")||g(s,"prochaine");var siret2=s.siret||s.si||"";
+    var insc=gi(s,"in")||gi(s,"insc");var gan=g(s,"ga")||g(s,"gagnant");var proch=g(s,"pr")||g(s,"prochaine");
+    /* Résoudre le siret : d'abord depuis l'objet, sinon lookup par nom dans STRUCTS */
+    var siret2=s.siret||s.si||_nsi[(nom||'').toLowerCase().trim()]||"";
+    if(siret2)_panelStructsSi.push(siret2);
     sh+='<div class="si" onclick="'+(siret2?'jumpToStruct(\''+siret2+'\')':'jumpTo(\''+nom.replace(/\'/g,"\\'")+'\',\''+ville.replace(/\'/g,"\\'")+'\',\''+dept+'\'')+'" ><div class="sn">'+nom+(siret2?' <span style="font-size:9px;font-family:monospace;color:var(--tx3);font-weight:400">'+siret2+'</span>':'')+'</div><div class="si2">'+ville+(dept?" ("+dept+")":"")+' &bull; '+(insc>0?insc+' inscrits':'pas d&rsquo;\u00e9lections')+(gan?' &bull; <span style="color:'+uc(gan)+'">\u2605 '+gan+'</span>':'')+(proch?' &bull; &#128197; '+proch:'')+'</div></div>';
   }
   document.getElementById("pd-structs").innerHTML=sh||'<div style="font-size:11px;color:var(--tx3)">Aucune structure.</div>';
