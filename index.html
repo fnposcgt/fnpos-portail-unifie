@@ -3392,13 +3392,25 @@ function buildSecteur(){
   var insc  = gs.total_insc||0;
   var vot   = gs.total_votants||0;
   var part  = insc>0 ? Math.round(vot/insc*100) : 0;
-  /* Adhérents CGT : compter depuis aci_edits_v1 (fiches locales), pas total_cgt qui est les voix électorales */
+  /* Adhérents CGT : compter depuis ADHERENTS en mémoire (déjà chargé depuis EDITS) */
   var adh = 0;
-  try {
-    var _editKey = (sec==='ml') ? 'fnpos_edits_ml' : 'aci_edits_v1';
-    var _edits = JSON.parse(localStorage.getItem(_editKey)||'{}');
-    for(var _k in _edits){ if(_edits[_k]&&_edits[_k].length) adh += _edits[_k].filter(function(a){return !a.arc;}).length; }
-  } catch(e){}
+  if(typeof ADHERENTS !== 'undefined'){
+    for(var _si in ADHERENTS){
+      var _lst = ADHERENTS[_si]||[];
+      for(var _ai=0;_ai<_lst.length;_ai++){ if(_lst[_ai].arc!=='OUI') adh++; }
+    }
+  }
+  /* Voix CGT et fourchette de dates des élections */
+  var cgtVoix = gs.total_cgt||0;
+  var dateMin='', dateMax='';
+  var src2 = (typeof STRUCTS!=='undefined'&&STRUCTS&&STRUCTS.length) ? STRUCTS : [];
+  for(var _di=0;_di<src2.length;_di++){
+    var _de=g(src2[_di],'de')||'';
+    if(!_de) continue;
+    if(!dateMin||_de<dateMin) dateMin=_de;
+    if(!dateMax||_de>dateMax) dateMax=_de;
+  }
+  function fmtDate(d){ if(!d)return'?'; var p=d.split('-'); return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:d; }
   function fmt(n){ return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,'\u00a0'); }
 
   /* KPIs */
@@ -3409,6 +3421,7 @@ function buildSecteur(){
     _skpi('👥','Inscrits',fmt(insc),inf.kpiLabel,'tableau')+
     _skpi('📈','Participation',part+'%','aux dernières élections','tableau')+
     _skpi('✊','Adhérents CGT',fmt(adh),'membres CGT recensés','adherents')+
+    _skpi('🗳️','Voix CGT',fmt(cgtVoix),'du '+fmtDate(dateMin)+' au '+fmtDate(dateMax),'tableau')+
   '</div>';
 
   /* Description */
