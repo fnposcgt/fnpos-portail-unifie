@@ -7528,5 +7528,118 @@ window.addEventListener('hashchange', function() {
 })();
 
 </script>
+
+<!-- ═══ MODALES ÉDITION ═══════════════════════════════════════════════════ -->
+<style>.chk-lbl{display:inline-flex;align-items:center;gap:5px;font-size:11px;cursor:pointer;padding:3px 8px;border:1px solid var(--bd2);border-radius:5px;background:var(--bg2)}.chk-lbl input{accent-color:#185fa5}</style>
+
+<!-- Modifier structure -->
+<div id="edit-struct-overlay" class="edit-overlay" onclick="editStructClose(event)">
+  <div class="edit-modal">
+    <div class="edit-modal-hdr"><span class="edit-modal-title" id="es-title">Modifier</span><button class="btn-cancel" onclick="editStructClose(null)">&#10005;</button></div>
+    <div class="edit-modal-body">
+      <input type="hidden" id="es-siret">
+      <div class="edit-field"><label>Nom</label><input id="es-nom" type="text"></div>
+      <div class="edit-field"><label>Adresse</label><input id="es-ad" type="text"></div>
+      <div class="edit-field-row"><div class="edit-field"><label>CP</label><input id="es-cp" type="text"></div><div class="edit-field"><label>Ville</label><input id="es-vil" type="text"></div></div>
+      <div class="edit-field-row"><div class="edit-field"><label>Tél</label><input id="es-tl" type="tel"></div><div class="edit-field"><label>Email</label><input id="es-em" type="email"></div></div>
+      <div class="edit-field"><label>Région</label><select id="es-reg">
+        <option value="AUVERGNE-RHÔNE-ALPES">AUVERGNE-RHÔNE-ALPES</option>
+        <option value="BOURGOGNE-FRANCHE-COMTÉ">BOURGOGNE-FRANCHE-COMTÉ</option>
+        <option value="BRETAGNE">BRETAGNE</option>
+        <option value="CENTRE-VAL DE LOIRE">CENTRE-VAL DE LOIRE</option>
+        <option value="CORSE">CORSE</option>
+        <option value="GRAND EST">GRAND EST</option>
+        <option value="GUADELOUPE">GUADELOUPE</option>
+        <option value="GUYANE">GUYANE</option>
+        <option value="HAUTS-DE-FRANCE">HAUTS-DE-FRANCE</option>
+        <option value="LA RÉUNION">LA RÉUNION</option>
+        <option value="MARTINIQUE">MARTINIQUE</option>
+        <option value="MAYOTTE">MAYOTTE</option>
+        <option value="NORMANDIE">NORMANDIE</option>
+        <option value="NOUVELLE-AQUITAINE">NOUVELLE-AQUITAINE</option>
+        <option value="OCCITANIE">OCCITANIE</option>
+        <option value="PAYS DE LA LOIRE">PAYS DE LA LOIRE</option>
+        <option value="PROVENCE-ALPES-CÔTE D'AZUR">PROVENCE-ALPES-CÔTE D'AZUR</option>
+        <option value="ÎLE-DE-FRANCE">ÎLE-DE-FRANCE</option>
+      </select></div>
+      <div class="edit-field-row"><div class="edit-field"><label>Prochaine él.</label><input id="es-pr" type="text" placeholder="jj/mm/aaaa"></div><div class="edit-field"><label>Dernière él.</label><input id="es-de" type="text"></div></div>
+      <div class="edit-field-row"><div class="edit-field"><label>Effectif</label><input id="es-nb" type="text"></div><div class="edit-field"><label id="label-es-ccn">CCN ACI</label><select id="es-ccn"><option value="">-</option><option value="OUI">OUI</option><option value="NON">NON</option></select></div></div>
+      <div class="edit-actions"><button class="btn-cancel" onclick="editStructClose(null)">Annuler</button><button class="btn-save" id="es-save-btn" onclick="editStructSave()">Enregistrer</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modifier contact région -->
+<div id="edit-contact-overlay" class="edit-overlay" onclick="editContactClose(event)">
+  <div class="edit-modal">
+    <div class="edit-modal-hdr"><span class="edit-modal-title" id="ec-modal-title">Contact CGT</span><button class="btn-cancel" onclick="editContactClose(null)">&#10005;</button></div>
+    <div class="edit-modal-body">
+      <input type="hidden" id="ec-reg"><input type="hidden" id="ec-role"><input type="hidden" id="ec-idx">
+      <div class="edit-field" id="ec-reg-row" style="display:none"><label>Région <span style="color:#E24B4A">*</span></label><select id="ec-reg-sel2"><option value="">-- Choisir une région --</option></select></div>
+      <div class="edit-field"><label>Nom complet</label><input id="ec-nom" type="text" placeholder="Prénom NOM"></div>
+      <div class="edit-field"><label>Rôle</label>
+        <select id="ec-role-sel" onchange="document.getElementById('ec-role').value=this.value">
+          <option value="referents">Référent élections</option>
+          <option value="membres_cef">Membre CEF</option>
+          <option value="responsables">Responsable de région</option>
+        </select>
+      </div>
+      <div class="edit-field-row"><div class="edit-field"><label>Téléphone</label><input id="ec-tel" type="tel"></div><div class="edit-field"><label>Email</label><input id="ec-em" type="email"></div></div>
+      <div class="edit-field"><label>Statut</label><select id="ec-actif"><option value="1">Actif</option><option value="0">Inactif</option></select></div>
+      <div class="edit-actions">
+        <button class="btn-cancel" onclick="editContactClose(null)">Annuler</button>
+        <button id="ec-del-btn" class="btn-save" style="background:#E24B4A" onclick="deleteContact(document.getElementById('ec-reg').value,document.getElementById('ec-role').value,parseInt(document.getElementById('ec-idx').value))">🗑 Supprimer</button>
+        <button class="btn-save" onclick="editContactSave()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Ajouter / modifier adhérent -->
+<div id="edit-adh-overlay" class="edit-overlay" onclick="editAdhClose(event)">
+  <div class="edit-modal">
+    <div class="edit-modal-hdr"><span class="edit-modal-title">Adhérent</span><button class="btn-cancel" onclick="editAdhClose(null)">&#10005;</button></div>
+    <div class="edit-modal-body">
+      <input type="hidden" id="ea-siret"><input type="hidden" id="ea-idx">
+      <div class="edit-field-row"><div class="edit-field"><label>Civilité</label><select id="ea-civ"><option value="">-</option><option value="M.">M.</option><option value="Mme">Mme</option></select></div><div class="edit-field"><label>Prénom</label><input id="ea-pre" type="text"></div></div>
+      <div class="edit-field"><label>Nom</label><input id="ea-nom" type="text"></div>
+      <div class="edit-field-row"><div class="edit-field"><label>Tél</label><input id="ea-tel" type="tel"></div><div class="edit-field"><label>Email</label><input id="ea-em" type="email"></div></div>
+      <div class="edit-field"><label>Adresse</label><input id="ea-adr" type="text" placeholder="N° et rue"></div>
+      <div class="edit-field"><label>Complément</label><input id="ea-adr2" type="text" placeholder="Bâtiment, appartement..."></div>
+      <div class="edit-field-row"><div class="edit-field"><label>CP</label><input id="ea-cp" type="text" maxlength="5"></div><div class="edit-field"><label>Ville</label><input id="ea-vil" type="text"></div></div>
+      <div class="edit-field-row"><div class="edit-field"><label>Date d'adhésion</label><input id="ea-adh" type="text" placeholder="jj/mm/aaaa"></div><div class="edit-field"><label>Statut</label><select id="ea-arc"><option value="NON">Actif</option><option value="OUI">Archivé</option></select></div></div>
+      <div class="edit-field"><label>Mandats locaux</label>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
+          <label class="chk-lbl"><input type="checkbox" id="ea-m-ds"> DS</label>
+          <label class="chk-lbl"><input type="checkbox" id="ea-m-rs"> RS</label>
+          <label class="chk-lbl"><input type="checkbox" id="ea-m-cse"> CSE Membre</label>
+          <label class="chk-lbl"><input type="checkbox" id="ea-m-tres"> CSE Trésorier</label>
+          <label class="chk-lbl"><input type="checkbox" id="ea-m-sec"> CSE Secrétaire</label>
+        </div>
+      </div>
+      <div class="edit-field"><label>Mandats nationaux</label>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
+          <label class="chk-lbl"><input type="checkbox" id="ea-mn-cppni"> CPPNI</label>
+          <label class="chk-lbl"><input type="checkbox" id="ea-mn-cpnef"> CPNEF</label>
+          <label class="chk-lbl"><input type="checkbox" id="ea-mn-cpnpfs"> CPNPFS</label>
+          <label class="chk-lbl"><input type="checkbox" id="ea-mn-cg"> Conseil de Gestion</label>
+          <label class="chk-lbl"><input type="checkbox" id="ea-mn-sppei"> SPPEI</label>
+          <label class="chk-lbl"><input type="checkbox" id="ea-mn-anat"> Animateur National</label>
+          <label class="chk-lbl"><input type="checkbox" id="ea-mn-colaci"> Collectif ACI</label>
+        </div>
+      </div>
+      <div class="edit-field"><label>Formations CGT</label>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
+          <label class="chk-lbl"><input type="checkbox" id="ea-f-part"> Participer</label>
+          <label class="chk-lbl"><input type="checkbox" id="ea-f-impl"> S'impliquer</label>
+          <label class="chk-lbl"><input type="checkbox" id="ea-f-cse"> CSE-SSCT</label>
+          <label class="chk-lbl"><input type="checkbox" id="ea-f-form"> Formateur</label>
+        </div>
+      </div>
+      <div class="edit-actions"><button class="btn-cancel" onclick="editAdhClose(null)">Annuler</button><button class="btn-save" onclick="editAdhSave()">Enregistrer</button></div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
