@@ -1694,6 +1694,16 @@ var ML_ADHERENTS={};
 
 /* ── GLOBAL SECTOR STATS (GS) & CAL VIEW MODE ── */
 var calViewMode = "list";   // "list" | "grid"
+function setCalView(mode) {
+  calViewMode = mode;
+  var lb = document.getElementById('cal-list-btn');
+  var gb = document.getElementById('cal-grid-btn');
+  if (lb) { lb.classList.toggle('on', mode === 'list'); }
+  if (gb) { gb.classList.toggle('on', mode === 'grid'); }
+  var gNav = document.getElementById('cal-grid-nav');
+  if (gNav) gNav.style.display = mode === 'grid' ? 'flex' : 'none';
+  if (typeof buildCal === 'function') buildCal();
+}
 var calMonth = new Date().getMonth();
 var calYear  = new Date().getFullYear();
 var CAL_MONTHS = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
@@ -1912,12 +1922,12 @@ function activateSector(def) {
     if (kpiSecLbl) kpiSecLbl.textContent = def.name;
   } catch(e) {}
 
-  /* Load edits and sync */
-  if (typeof editsLoad === 'function')   editsLoad();
-  if (typeof conqueteLoad === 'function') conqueteLoad();
-  if (typeof buildKPIs === 'function')   buildKPIs();
-  if (typeof fillSelects === 'function') fillSelects();
-  if (typeof filtersRestore === 'function') filtersRestore();
+  /* Load edits and sync — chaque appel isolé pour qu'une erreur n'interrompe pas les suivants */
+  try { if (typeof editsLoad === 'function')   editsLoad();    } catch(e) { console.error('[activateSector] editsLoad:', e); }
+  try { if (typeof conqueteLoad === 'function') conqueteLoad(); } catch(e) { console.error('[activateSector] conqueteLoad:', e); }
+  try { if (typeof buildKPIs === 'function')   buildKPIs();    } catch(e) { console.error('[activateSector] buildKPIs:', e); }
+  try { if (typeof fillSelects === 'function') fillSelects();  } catch(e) { console.error('[activateSector] fillSelects:', e); }
+  try { if (typeof filtersRestore === 'function') filtersRestore(); } catch(e) { console.error('[activateSector] filtersRestore:', e); }
   /* Après restauration des filtres, s'assurer que fpar ne vide pas le tableau :
      si la participation sauvegardée est restrictive mais qu'aucun résultat n'est probable,
      on force à "Tous". On rebuilde toujours une seconde fois après 500ms (belt+suspenders). */
