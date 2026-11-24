@@ -5021,7 +5021,14 @@ function tSetPageSize(n){
   buildTable(true);
 }
 function jumpToStruct(siret){
-  openFiche(siret);
+  /* Naviguer vers l'onglet tableau puis ouvrir la fiche automatiquement */
+  if(typeof goTab === 'function'){
+    goTab('tableau');
+    /* buildTable() est appelé avec un délai de 80ms par goTab ; on attend un peu plus */
+    setTimeout(function(){ openFiche(siret); }, 200);
+  } else {
+    openFiche(siret);
+  }
 }
 function killChart(id){if(chartCache[id]){chartCache[id].destroy();delete chartCache[id];}}
 function buildCharts(){
