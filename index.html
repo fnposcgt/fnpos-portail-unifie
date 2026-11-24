@@ -6913,6 +6913,8 @@ window.addEventListener('hashchange', function() {
           '</div>'+
           '<div style="display:flex;gap:8px;align-items:center">'+
             '<button id="fiche-edit-btn" onclick="editStructFromFiche()" style="display:none;font-size:11px;padding:4px 10px;border:1px solid var(--bd2);border-radius:6px;cursor:pointer;background:var(--bg);color:#185fa5;font-weight:600">✏️ Modifier</button>'+
+            '<button id="fiche-pdf-btn" onclick="fichePrint()" title="Imprimer / PDF" style="font-size:11px;padding:4px 10px;border:1px solid var(--bd2);border-radius:6px;cursor:pointer;background:var(--bg);color:#185fa5;font-weight:600">📄 PDF</button>'+
+            '<button id="fiche-mail-btn" onclick="ficheEmail()" title="Envoyer par e-mail" style="font-size:11px;padding:4px 10px;border:1px solid var(--bd2);border-radius:6px;cursor:pointer;background:var(--bg);color:#185fa5;font-weight:600">✉ Mail</button>'+
             '<button id="fiche-close" onclick="closeFiche()">✕</button>'+
           '</div>'+
         '</div>'+
@@ -6953,6 +6955,51 @@ window.addEventListener('hashchange', function() {
 
     /* ── Sections ── */
     var h = '';
+
+    /* Identification */
+    h += '<div style="padding:14px 20px 0">';
+    h += '<div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">Identification</div>';
+    h += '<div style="display:grid;grid-template-columns:auto 1fr;gap:7px 14px;font-size:12px;align-items:center">';
+    h += '<span style="color:var(--tx3);font-weight:600">SIRET</span><span style="font-family:monospace;font-size:11px;color:var(--tx)">'+(s.si||'—')+'</span>';
+    var ccnOui = (s.cc||'').toUpperCase()==='OUI';
+    h += '<span style="color:var(--tx3);font-weight:600">CCN ACI</span>';
+    h += '<span style="display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700;'+(ccnOui?'background:#1b7a1b;color:#fff':'background:#E24B4A;color:#fff')+'">'+(ccnOui?'OUI':'NON')+'</span>';
+    if(s.ts) h += '<span style="color:var(--tx3);font-weight:600">Type</span><span>'+s.ts+'</span>';
+    if(s.nb) h += '<span style="color:var(--tx3);font-weight:600">Taille</span><span>'+s.nb+' salariés</span>';
+    if(s.an) h += '<span style="color:var(--tx3);font-weight:600">Créée en</span><span>'+s.an+'</span>';
+    if(s.ag==='OUI') h += '<span style="color:var(--tx3);font-weight:600">Agrément</span><span style="color:#1b7a1b;font-weight:700">✓ Agréé IAE</span>';
+    h += '</div></div>';
+
+    /* Statut conquête */
+    if(!IS_READONLY){
+      var cqSt = conqueteStatus[s.si] || 0;
+      var cqNote = conqueteNotes[s.si] || '';
+      var cqDate = conqueteDates[s.si] || '';
+      var CQ_OPTS = [['0','Néant'],['1','Approche'],['2','Constitution'],['3','Implantation'],['4','UD/UL']];
+      var cqColors = ['#888','#EF9F27','#185fa5','#1b7a1b','#E24B4A'];
+      h += '<div style="padding:14px 20px 0">';
+      h += '<div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Statut conquête</div>';
+      h += '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">';
+      h += '<select onchange="cqFromFiche(\''+s.si+'\',this.value)" style="font-size:12px;padding:5px 10px;border:1px solid var(--bd2);border-radius:8px;background:var(--bg);color:var(--tx);cursor:pointer">';
+      for(var cqi=0;cqi<CQ_OPTS.length;cqi++){
+        h += '<option value="'+CQ_OPTS[cqi][0]+'"'+(cqSt===parseInt(CQ_OPTS[cqi][0])?' selected':'')+'>'+CQ_OPTS[cqi][1]+'</option>';
+      }
+      h += '</select>';
+      h += '<span style="font-size:11px;font-weight:700;color:'+cqColors[cqSt]+'">● '+CQ_OPTS[cqSt][1]+'</span>';
+      if(cqDate) h += '<span style="font-size:10px;color:var(--tx3)">depuis le '+cqDate+'</span>';
+      h += '</div>';
+      h += '<textarea placeholder="Notes conquête…" oninput="cqNoteFromFiche(\''+s.si+'\',this.value)" style="margin-top:8px;width:100%;box-sizing:border-box;font-size:11px;padding:7px 10px;border:1px solid var(--bd2);border-radius:8px;background:var(--bg2);color:var(--tx);resize:vertical;min-height:52px;font-family:inherit">'+cqNote+'</textarea>';
+      h += '</div>';
+    }
+
+    /* Description */
+    if(s.pres){
+      var presText = s.pres.replace(/\n/g,'<br>');
+      h += '<div style="padding:14px 20px 0">';
+      h += '<div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Présentation</div>';
+      h += '<div style="font-size:12px;line-height:1.5;color:var(--tx2);background:var(--bg2);border-radius:8px;padding:10px 14px;border-left:3px solid var(--bd2)">'+presText+'</div>';
+      h += '</div>';
+    }
 
     /* Contact */
     h += '<div style="padding:14px 20px 0">';
@@ -7099,6 +7146,115 @@ window.addEventListener('hashchange', function() {
     if(ov) ov.classList.remove('open');
     document.body.style.overflow = '';
     FICHE_CURRENT_SIRET = '';
+  };
+
+  /* Mise à jour statut conquête depuis la fiche */
+  window.cqFromFiche = function(siret, val){
+    var v = parseInt(val);
+    conqueteStatus[siret] = v;
+    var d = new Date();
+    conqueteDates[siret] = ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+d.getFullYear();
+    conqueteTS[siret] = Date.now();
+    conqueteSave();
+    showEditToast('✅ Statut conquête enregistré');
+    /* Rafraîchir la fiche pour refléter le changement */
+    openFiche(siret);
+  };
+
+  window.cqNoteFromFiche = function(siret, val){
+    conqueteNotes[siret] = val;
+    conqueteTS[siret] = Date.now();
+    conqueteSave();
+  };
+
+  /* Impression / PDF de la fiche */
+  window.fichePrint = function(){
+    if(!FICHE_CURRENT_SIRET) return;
+    var s = null;
+    for(var i=0;i<STRUCTS.length;i++){ if(STRUCTS[i].si===FICHE_CURRENT_SIRET){s=STRUCTS[i];break;} }
+    if(!s) return;
+    var CQ_OPTS_L = ['Néant','Approche','Constitution','Implantation','UD/UL'];
+    var cqSt = conqueteStatus[s.si] || 0;
+    var cqDate = conqueteDates[s.si] || '';
+    var cqNote = conqueteNotes[s.si] || '';
+    var today = new Date().toLocaleDateString('fr-FR');
+    var body = document.getElementById('fiche-body').innerHTML;
+    var nom = s.n || s.si;
+    var win = window.open('','_blank','width=700,height=900');
+    win.document.write('<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">'+
+      '<title>Fiche — '+nom+'</title>'+
+      '<style>body{font-family:Arial,sans-serif;font-size:12px;color:#111;margin:0;padding:20px}'+
+      'h1{font-size:16px;font-weight:800;margin:0 0 4px}'+
+      '.sub{font-size:11px;color:#666;margin-bottom:16px}'+
+      '.section-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#888;margin:14px 0 6px}'+
+      '.badge-oui{background:#1b7a1b;color:#fff;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700}'+
+      '.badge-non{background:#c0392b;color:#fff;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700}'+
+      'table{border-collapse:collapse;width:100%;margin-bottom:12px}td{padding:3px 6px;vertical-align:top}'+
+      'td:first-child{color:#888;width:110px;white-space:nowrap}'+
+      '.pres{background:#f5f5f5;border-left:3px solid #ccc;padding:8px 12px;font-size:11px;line-height:1.5;border-radius:0 6px 6px 0}'+
+      '.footer{margin-top:24px;font-size:9px;color:#aaa;border-top:1px solid #eee;padding-top:8px}'+
+      'select,textarea,button{display:none!important}'+
+      '@media print{.no-print{display:none}}</style>'+
+      '</head><body>'+
+      '<h1>'+nom+'</h1>'+
+      '<div class="sub">'+(s.r||'')+' — '+s.v+' (Dép. '+s.d+')</div>'+
+      '<div class="section-title">Identification</div>'+
+      '<table>'+
+      '<tr><td>SIRET</td><td><code>'+s.si+'</code></td></tr>'+
+      '<tr><td>CCN ACI</td><td><span class="'+(s.cc==='OUI'?'badge-oui':'badge-non')+'">'+(s.cc||'—')+'</span></td></tr>'+
+      (s.ts?'<tr><td>Type</td><td>'+s.ts+'</td></tr>':'')+
+      (s.nb?'<tr><td>Taille</td><td>'+s.nb+' salariés</td></tr>':'')+
+      (s.an?'<tr><td>Créée en</td><td>'+s.an+'</td></tr>':'')+
+      '</table>'+
+      '<div class="section-title">Statut conquête</div>'+
+      '<table>'+
+      '<tr><td>Statut</td><td><b>'+(CQ_OPTS_L[cqSt]||'Néant')+'</b>'+(cqDate?' (depuis '+cqDate+')':'')+'</td></tr>'+
+      (cqNote?'<tr><td>Notes</td><td>'+cqNote.replace(/\n/g,'<br>')+'</td></tr>':'')+
+      '</table>'+
+      (s.pres?'<div class="section-title">Présentation</div><div class="pres">'+s.pres.replace(/\n/g,'<br>')+'</div>':'')+
+      '<div class="section-title">Contact</div>'+
+      '<table>'+
+      ([s.ad,s.cp,s.v].filter(Boolean).length?'<tr><td>Adresse</td><td>'+[s.ad,s.cp,s.v].filter(Boolean).join(', ')+'</td></tr>':'')+
+      (s.tl?'<tr><td>Téléphone</td><td>'+s.tl+'</td></tr>':'')+
+      (s.em?'<tr><td>Email</td><td>'+s.em+'</td></tr>':'')+
+      (s.web?'<tr><td>Site web</td><td>'+s.web+'</td></tr>':'')+
+      (s.fi?'<tr><td>Fiche Inclusion</td><td>'+s.fi+'</td></tr>':'')+
+      '</table>'+
+      '<div class="footer">Fiche générée le '+today+' — Portail FNPOS-CGT · Secteur ACI</div>'+
+      '</body></html>');
+    win.document.close();
+    win.focus();
+    setTimeout(function(){ win.print(); }, 500);
+  };
+
+  /* Email avec récapitulatif de la fiche */
+  window.ficheEmail = function(){
+    if(!FICHE_CURRENT_SIRET) return;
+    var s = null;
+    for(var i=0;i<STRUCTS.length;i++){ if(STRUCTS[i].si===FICHE_CURRENT_SIRET){s=STRUCTS[i];break;} }
+    if(!s) return;
+    var CQ_OPTS_L = ['Néant','Approche','Constitution','Implantation','UD/UL'];
+    var cqSt = conqueteStatus[s.si] || 0;
+    var cqDate = conqueteDates[s.si] || '';
+    var sujet = encodeURIComponent('[FNPOS-CGT] Fiche structure — '+s.n);
+    var corps = [];
+    corps.push(s.n);
+    corps.push(s.si ? 'SIRET : '+s.si : '');
+    corps.push('CCN ACI : '+(s.cc||'—'));
+    if(s.ts) corps.push('Type : '+s.ts);
+    if(s.nb) corps.push('Taille : '+s.nb+' salariés');
+    if(s.r) corps.push('Région : '+s.r);
+    if(s.ad||s.v) corps.push('Adresse : '+[s.ad,s.cp,s.v].filter(Boolean).join(', '));
+    if(s.tl) corps.push('Tél : '+s.tl);
+    if(s.em) corps.push('Email : '+s.em);
+    corps.push('');
+    corps.push('Statut conquête : '+(CQ_OPTS_L[cqSt]||'Néant')+(cqDate?' (depuis '+cqDate+')':''));
+    if(conqueteNotes[s.si]) corps.push('Notes : '+conqueteNotes[s.si]);
+    if(s.fi){ corps.push(''); corps.push('Fiche Inclusion : '+s.fi); }
+    corps.push('');
+    corps.push('-- Portail FNPOS-CGT · Secteur ACI');
+    var mailto = 'mailto:?subject='+sujet+'&body='+encodeURIComponent(corps.filter(function(l){return l!==undefined&&l!==null;}).join('\n'));
+    window.location.href = mailto;
   };
 
   /* Fermer avec Échap */
