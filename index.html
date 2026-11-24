@@ -4754,6 +4754,8 @@ function _renderDeptLayer(gj){
   _lfAdhLayer=L.layerGroup(adhMarkers).addTo(_lfMap);
 }
 function showPanel(name,code,dk,ai){
+  /* Mémoriser les sirets du panneau pour auto-ouverture de fiche */
+  _panelStructsSi=(dk.structs||[]).map(function(s){return s.si||s.siret||"";}).filter(Boolean);
   document.getElementById("panel-empty").style.display="none";document.getElementById("panel-detail").style.display="block";
   document.getElementById("pd-title").textContent=name;
   document.getElementById("pd-sub").textContent=dk.count+" structure"+(dk.count>1?"s":"")+(dk.insc>0?" \u00b7 "+fmt(dk.insc)+" inscrits":"");
@@ -4792,6 +4794,8 @@ function showPanel(name,code,dk,ai){
   }
 }
 function showDeptPanel(name,code,dk,regCode,ai){
+  /* Mémoriser les sirets du panneau pour auto-ouverture de fiche */
+  _panelStructsSi=(dk.structs||[]).map(function(s){return s.si||s.siret||"";}).filter(Boolean);
   document.getElementById("panel-empty").style.display="none";document.getElementById("panel-detail").style.display="block";
   document.getElementById("pd-title").textContent=name;
   document.getElementById("pd-sub").textContent=dk.count+" structure"+(dk.count>1?"s":"")+(regCode?" \u2014 "+regCode:"");
@@ -4831,9 +4835,15 @@ function showPanelEmpty(name){
   document.getElementById("pd-statrows").innerHTML='<div style="font-size:12px;color:var(--tx3);padding:8px 0">Cette zone est gris\u00e9e car elle n&rsquo;a pas de structure ACI dans la base.</div>';
   document.getElementById("pd-unions").innerHTML="";document.getElementById("pd-structs").innerHTML="";document.getElementById("pd-col").innerHTML="";
 }
+/* Structures du panneau carte courant — pour auto-ouvrir la fiche */
+var _panelStructsSi = [];
 function ptab(id){
   var ids=["pt-stats","pt-structs","pt-col"],btns=document.querySelectorAll(".ptb");
   for(var i=0;i<ids.length;i++){document.getElementById(ids[i]).style.display=ids[i]===id?"block":"none";if(btns[i])btns[i].classList.toggle("on",ids[i]===id);}
+  /* Auto-ouvrir la fiche si une seule structure dans le panneau courant */
+  if(id==='pt-structs' && _panelStructsSi.length===1 && typeof openFiche==='function'){
+    setTimeout(function(){ openFiche(_panelStructsSi[0]); }, 80);
+  }
 }
 function jumpTo(nom,ville,dept){
   var si=null;
@@ -5021,14 +5031,8 @@ function tSetPageSize(n){
   buildTable(true);
 }
 function jumpToStruct(siret){
-  /* Naviguer vers l'onglet tableau puis ouvrir la fiche automatiquement */
-  if(typeof goTab === 'function'){
-    goTab('tableau');
-    /* buildTable() est appelé avec un délai de 80ms par goTab ; on attend un peu plus */
-    setTimeout(function(){ openFiche(siret); }, 200);
-  } else {
-    openFiche(siret);
-  }
+  /* Ouvrir la fiche modale directement (on reste sur la carte) */
+  openFiche(siret);
 }
 function killChart(id){if(chartCache[id]){chartCache[id].destroy();delete chartCache[id];}}
 function buildCharts(){
