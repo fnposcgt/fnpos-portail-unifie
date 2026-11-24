@@ -3397,6 +3397,7 @@ function goTab(name){
   if(name==="outils")window.setTimeout(renderBiblioTab,80);
   if(name==="carte")window.setTimeout(function(){ drawMap(); if(_lfMap) _lfMap.invalidateSize(); },150);
   if(name==="secteur")window.setTimeout(buildSecteur,80);
+  if(name==="calendrier")window.setTimeout(function(){if(typeof buildCal==='function')buildCal();},80);
   try{localStorage.setItem('fnpos_tab_'+SEC,name);}catch(e){}
 }
 /* ═══ ONGLET SECTEUR — générique ACI / ML ═══ */
@@ -5027,7 +5028,7 @@ function getFiltered(){
   for(var i=0;i<STRUCTS.length;i++){
     var s=STRUCTS[i];
     var nom=g(s,"n")||"",ville=g(s,"v")||"",region=g(s,"r")||"";
-    var ccn=(g(s,"cc")||"").toUpperCase(),gan=(g(s,"ga")||"").toUpperCase(),pa=gf(s,"pa");
+    var ccn=String(g(s,"cc")||"").toUpperCase(),gan=String(g(s,"ga")||"").toUpperCase(),pa=gf(s,"pa");
     var inscr=gi(s,"in")||0,siret=(g(s,"si")||"").toLowerCase();
     var de=(g(s,"de")||"").toLowerCase(),pr=(g(s,"pr")||"").toLowerCase();
     var tl=(g(s,"tl")||"").toLowerCase(),em=(g(s,"em")||"").toLowerCase();
@@ -5463,6 +5464,7 @@ function buildCal(){
   data.sort(function(a,b){return a.ts-b.ts;});
   document.getElementById("calcnt").textContent=data.length+" \u00e9lection"+(data.length>1?"s":"");
   var h="";
+  try{
   var _byMonth={};
   for(var i=0;i<data.length;i++){
     var _pr2=g(data[i].s,"pr");
@@ -5533,11 +5535,12 @@ function buildCal(){
         +'<div class="cci">'+sReg+'</div>'
         +addrHtml+structContact
         +(g(s,"de")?'<div style="font-size:10px;color:var(--tx3);margin-top:2px">Derni\u00e8re : '+fmtDateDisp(g(s,"de"))+'</div>':"")
-        +(g(s,"cc")?'<div style="margin-top:3px"><span class="badge" style="background:'+(g(s,"cc").toUpperCase()==="OUI"?"#0f6e56":"#888")+'">'+(typeof CFG!=='undefined'&&CFG.short?'CCN '+CFG.short:'CCN ACI')+' '+g(s,"cc")+'</span></div>':"");
+        +(g(s,"cc")?'<div style="margin-top:3px"><span class="badge" style="background:'+(String(g(s,"cc")).toUpperCase()==="OUI"?"#0f6e56":"#888")+'">'+(typeof CFG!=='undefined'&&CFG.short?'CCN '+CFG.short:'CCN ACI')+' '+g(s,"cc")+'</span></div>':"");
       h+=refHtml+renderUDBlock(g(s,"cp"))+'</div></div>';
     }
     h+='</div>';
   }
+  }catch(_calErr){console.error('[buildCal] list HTML error:',_calErr);}
   if(!h)h='<div style="color:var(--tx3);font-size:12px;padding:20px 0">Aucune \u00e9lection dans cet horizon.</div>';
   if(calViewMode==="grid"){
     var nav = document.getElementById("cal-grid-nav");
