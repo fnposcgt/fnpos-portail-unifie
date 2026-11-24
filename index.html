@@ -3392,7 +3392,13 @@ function buildSecteur(){
   var insc  = gs.total_insc||0;
   var vot   = gs.total_votants||0;
   var part  = insc>0 ? Math.round(vot/insc*100) : 0;
-  var adh   = (typeof ADHERENTS!=='undefined'&&ADHERENTS&&ADHERENTS.length) ? ADHERENTS.length : (gs.total_cgt||0);
+  /* Adhérents CGT : compter depuis aci_edits_v1 (fiches locales), pas total_cgt qui est les voix électorales */
+  var adh = 0;
+  try {
+    var _editKey = (sec==='ml') ? 'fnpos_edits_ml' : 'aci_edits_v1';
+    var _edits = JSON.parse(localStorage.getItem(_editKey)||'{}');
+    for(var _k in _edits){ if(_edits[_k]&&_edits[_k].length) adh += _edits[_k].filter(function(a){return !a.arc;}).length; }
+  } catch(e){}
   function fmt(n){ return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,'\u00a0'); }
 
   /* KPIs */
