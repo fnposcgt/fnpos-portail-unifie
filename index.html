@@ -6682,13 +6682,14 @@ function emPopulateFilters() {
   var i, ud, row, reg, dep;
 
   if (EM_TYPE === 'ud' || EM_TYPE === 'ul') {
-    /* Source : CONTACTS_BY_REGION (les régions réelles avec contacts CGT) */
-    if (typeof CONTACTS_BY_REGION !== 'undefined') {
-      var _rKeys = Object.keys(CONTACTS_BY_REGION);
-      for (i = 0; i < _rKeys.length; i++) {
-        if (_rKeys[i]) regions[_rKeys[i]] = 1;
+    /* Source : UD_DATA — régions et départements réels */
+    if (typeof UD_DATA !== 'undefined') {
+      for (i = 0; i < UD_DATA.length; i++) {
+        ud = UD_DATA[i];
+        if (ud.region) regions[ud.region] = 1;
+        dep = String(ud.code).replace(/^0+/,'');
+        if (dep) depts[dep] = 1;
       }
-      /* Pas de filtre département pertinent pour les contacts régionaux */
     }
   } else if (EM_TYPE === 'str') {
     if (typeof STRUCTS !== 'undefined') {
@@ -6751,47 +6752,38 @@ function emBuildCandidates() {
   var i, j, ud, ul, row, email, nom, reg, dep, ville, hay;
 
   if (EM_TYPE === 'ud') {
-    /* Source : CONTACTS_BY_REGION → responsables régionaux CGT (les emails UD_DATA sont vides) */
-    if (typeof CONTACTS_BY_REGION !== 'undefined') {
-      var _regs = Object.keys(CONTACTS_BY_REGION);
-      for (i = 0; i < _regs.length; i++) {
-        var _reg = _regs[i];
-        if (fReg && _reg !== fReg) continue;
-        var _resp = (CONTACTS_BY_REGION[_reg].responsables || []);
-        for (j = 0; j < _resp.length; j++) {
-          email = emCleanEmail(_resp[j].email || '');
-          if (!email) continue;
-          nom = (_resp[j].nom || '').trim();
-          if (fSearch && (nom + email + _reg).toLowerCase().indexOf(fSearch) < 0) continue;
-          candidates.push({email:email, nom:nom, badge:'ud', detail:_reg});
-        }
-        /* Fallback : referents si pas de responsables avec email */
-        if (!_resp.some(function(r){return emCleanEmail(r.email||'');})) {
-          var _refs = (CONTACTS_BY_REGION[_reg].referents || []);
-          for (j = 0; j < _refs.length; j++) {
-            email = emCleanEmail(_refs[j].email || '');
-            if (!email) continue;
-            nom = (_refs[j].nom || '').trim();
-            if (fSearch && (nom + email + _reg).toLowerCase().indexOf(fSearch) < 0) continue;
-            candidates.push({email:email, nom:nom, badge:'ud', detail:_reg});
-          }
-        }
+    /* Source : UD_DATA après applyEdits() — les emails sont saisis via l'onglet UD/UL */
+    if (typeof applyEdits === 'function') try { applyEdits(); } catch(e) {}
+    if (typeof UD_DATA !== 'undefined') {
+      for (i = 0; i < UD_DATA.length; i++) {
+        ud    = UD_DATA[i];
+        email = emCleanEmail(ud.email || '');
+        if (!email) continue;
+        if (fReg && ud.region !== fReg) continue;
+        dep = String(ud.code).replace(/^0+/,'');
+        if (fDept && dep !== fDept) continue;
+        nom = (ud.nom || '').trim();
+        if (fSearch && (nom + email).toLowerCase().indexOf(fSearch) < 0) continue;
+        candidates.push({email:email, nom:nom, badge:'ud', detail:ud.region||''});
       }
     }
   } else if (EM_TYPE === 'ul') {
-    /* Source : CONTACTS_BY_REGION → membres_cef (CEF = collectif élu·es fédéral·es) */
-    if (typeof CONTACTS_BY_REGION !== 'undefined') {
-      var _regs2 = Object.keys(CONTACTS_BY_REGION);
-      for (i = 0; i < _regs2.length; i++) {
-        var _reg2 = _regs2[i];
-        if (fReg && _reg2 !== fReg) continue;
-        var _cef = (CONTACTS_BY_REGION[_reg2].membres_cef || []);
-        for (j = 0; j < _cef.length; j++) {
-          email = emCleanEmail(_cef[j].email || '');
+    /* Source : UD_DATA[i].uls après applyEdits() — les emails UL sont saisis via l'onglet UD/UL */
+    if (typeof applyEdits === 'function') try { applyEdits(); } catch(e) {}
+    if (typeof UD_DATA !== 'undefined') {
+      for (i = 0; i < UD_DATA.length; i++) {
+        ud = UD_DATA[i];
+        if (fReg && ud.region !== fReg) continue;
+        dep = String(ud.code).replace(/^0+/,'');
+        if (fDept && dep !== fDept) continue;
+        var uls = ud.uls || [];
+        for (j = 0; j < uls.length; j++) {
+          var ul = uls[j];
+          email = emCleanEmail(ul.email || '');
           if (!email) continue;
-          nom = (_cef[j].nom || '').trim();
-          if (fSearch && (nom + email + _reg2).toLowerCase().indexOf(fSearch) < 0) continue;
-          candidates.push({email:email, nom:nom, badge:'ul', detail:_reg2});
+          nom = (ul.nom || '').trim();
+          if (fSearch && (nom + email).toLowerCase().indexOf(fSearch) < 0) continue;
+          candidates.push({email:email, nom:nom, badge:'ul', detail:ud.nom||''});
         }
       }
     }
