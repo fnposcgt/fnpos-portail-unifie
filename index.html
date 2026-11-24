@@ -2043,7 +2043,10 @@ function filtersRestore(){
     var state=JSON.parse(raw);
     for(var _id in state){
       var _rel=document.getElementById(_id);
-      if(_rel) _rel.value=state[_id];
+      if(!_rel)continue;
+      _rel.value=state[_id];
+      // Pour les <select>, vérifier que la valeur est bien disponible
+      if(_rel.tagName==='SELECT'&&state[_id]&&_rel.value!==state[_id]){_rel.value='';}
     }
   }catch(e){}
 }
@@ -3842,7 +3845,7 @@ function fillSelects(){
   regs.sort();
   var tfRel=document.getElementById("tf-r");if(tfRel){var tfROpts='<option value="">Toutes</option>';for(var ri2=0;ri2<regs.length;ri2++)tfROpts+='<option value="'+regs[ri2]+'">'+regs[ri2]+'</option>';tfRel.innerHTML=tfROpts;}
   var ids=["freg","ch-reg","cal-reg","cib-reg","cnt-reg","cq-reg-filter"];
-  for(var si=0;si<ids.length;si++){var el=document.getElementById(ids[si]);if(!el)continue;for(var ri=0;ri<regs.length;ri++){var o=document.createElement("option");o.value=regs[ri];o.textContent=regs[ri];el.appendChild(o);}}
+  for(var si=0;si<ids.length;si++){var el=document.getElementById(ids[si]);if(!el)continue;while(el.options.length>1)el.remove(1);for(var ri=0;ri<regs.length;ri++){var o=document.createElement("option");o.value=regs[ri];o.textContent=regs[ri];el.appendChild(o);}}
   var cntreg=document.getElementById("cnt-reg");
   if(cntreg){
     var cRegs=Object.keys(CONTACTS_BY_REGION).sort();
