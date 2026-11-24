@@ -1827,13 +1827,15 @@ function goView(id, evt) {
 
   /* Swap data blobs */
   if (id === 'aci') {
-    STRUCTS   = ACI_STRUCTS;
-    RS        = ACI_RS;
-    ADHERENTS = ACI_ADHERENTS;
+    STRUCTS    = ACI_STRUCTS;
+    RS         = ACI_RS;
+    ADHERENTS  = ACI_ADHERENTS;
+    REPR_DATA  = REPR_DATA_ACI;
   } else if (id === 'ml') {
-    STRUCTS   = ML_STRUCTS;
-    RS        = ML_RS;
-    ADHERENTS = ML_ADHERENTS;
+    STRUCTS    = ML_STRUCTS;
+    RS         = ML_RS;
+    ADHERENTS  = ML_ADHERENTS;
+    REPR_DATA  = REPR_DATA_ML;
   }
 
   /* Swap config */
