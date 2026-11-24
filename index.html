@@ -777,7 +777,7 @@ main{max-width:1100px;margin:0 auto;padding:28px 20px 60px}
     <div id="auth-mode" class="auth-mode-admin">🔐 Administration</div>
     <input type="password" id="auth-input" placeholder="Mot de passe" autocomplete="current-password">
     <button id="auth-btn" onclick="checkAuth()">Accéder</button>
-    <button id="auth-bio-btn" onclick="tryBiometric()">🪪 Utiliser la biométrie / code PIN</button>
+    <button id="auth-bio-btn" onclick="tryBiometric()">🔢 Code PIN d'accès rapide</button>
     <div id="auth-error"></div>
     <div id="auth-hint"></div>
   </div>
@@ -815,8 +815,13 @@ function initAuth() {
     hintEl.textContent = 'Accès réservé aux responsables de secteur FNPOS-CGT';
   }
 
-  /* Afficher bouton biométrie/PIN — toujours visible (tryBiometric gère l'absence) */
-  if (bioBtn) bioBtn.style.display = 'block';
+  /* Afficher bouton code PIN — toujours visible */
+  if (bioBtn) {
+    bioBtn.style.display = 'block';
+    var hasPinNow = false;
+    try{ hasPinNow = !!localStorage.getItem('_fnpos_pin_data'); }catch(e){}
+    bioBtn.textContent = hasPinNow ? '🔢 Connexion par code PIN (activé ✓)' : '🔢 Créer un code PIN d\'accès rapide';
+  }
 
   /* Touches clavier */
   input.addEventListener('keydown', function(e) {
@@ -924,73 +929,74 @@ function authSuccess() {
   }, 320);
 }
 
-/* ═══ BIOMÉTRIE WebAuthn (Windows Hello / Face ID / empreinte / PIN) ═══ */
-var _BIO_RP_ID   = window.location.hostname || 'fnposcgt.github.io';
-var _BIO_RP_NAME = 'FNPOS-CGT';
-var _BIO_UID     = new Uint8Array([70,78,80,79,83,67,71,84]); // "FNPOSCGT"
-function _b64u(arr){return btoa(String.fromCharCode.apply(null,new Uint8Array(arr))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');}
-function _b64d(s){return Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')),function(c){return c.charCodeAt(0);});}
+/* ═══ ACCÈS RAPIDE : CODE PIN LOCAL (4–8 chiffres) ═══ */
+/* Alternative fiable à WebAuthn — fonctionne sur tous les navigateurs/PC */
+var _PIN_KEY_DATA = '_fnpos_pin_data'; /* {hash, pwd} en localStorage */
 
-async function tryBiometric() {
+function _pinHash(pin, salt){
+  /* hash simple : SHA-256 simulé avec XOR + somme pour compatibilité universelle */
+  var s = pin + '|' + salt + '|FNPOS';
+  var h = 0x811c9dc5;
+  for(var i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = (h * 0x01000193) >>> 0; }
+  return h.toString(16) + s.length.toString(16);
+}
+
+function pinSetup(){
+  var input = document.getElementById('auth-input');
+  var errEl = document.getElementById('auth-error');
+  var pwd   = input ? input.value.trim() : '';
+  if(!pwd){ if(errEl){errEl.style.color='#FFD580';errEl.textContent='💡 Entrez d\'abord votre mot de passe, puis cliquez sur Code PIN';} return; }
+  var pin = prompt('Choisissez un code PIN (4 à 8 chiffres) :');
+  if(!pin){ return; }
+  pin = pin.trim();
+  if(!/^\d{4,8}$/.test(pin)){ alert('Le code PIN doit contenir entre 4 et 8 chiffres.'); return; }
+  var salt = Date.now().toString(36);
+  var hash = _pinHash(pin, salt);
+  try{
+    localStorage.setItem(_PIN_KEY_DATA, JSON.stringify({h:hash, s:salt, p:btoa(unescape(encodeURIComponent(pwd)))}));
+    if(errEl){errEl.style.color='#1D9E75';errEl.textContent='✅ Code PIN enregistré ! Utilisez-le à la prochaine connexion.';}
+    var bioBtn = document.getElementById('auth-bio-btn');
+    if(bioBtn) bioBtn.textContent = '🔢 Code PIN (activé ✓)';
+  } catch(e){
+    if(errEl){errEl.style.color='#ff7070';errEl.textContent='❌ Impossible d\'enregistrer : '+e.message;}
+  }
+}
+
+function pinUnlock(){
+  var errEl = document.getElementById('auth-error');
+  var stored = null;
+  try{ stored = JSON.parse(localStorage.getItem(_PIN_KEY_DATA)); } catch(e){}
+  if(!stored){ if(errEl){errEl.style.color='#FFD580';errEl.textContent='💡 Aucun code PIN enregistré. Entrez votre mot de passe pour en créer un.';} return; }
+  var pin = prompt('Code PIN :');
+  if(!pin) return;
+  var hash = _pinHash(pin.trim(), stored.s);
+  if(hash !== stored.h){ if(errEl){errEl.style.color='#ff7070';errEl.textContent='❌ Code PIN incorrect.';} return; }
+  var input = document.getElementById('auth-input');
+  try{ if(input) input.value = decodeURIComponent(escape(atob(stored.p))); } catch(de){ if(input) input.value = atob(stored.p); }
+  if(errEl) errEl.textContent = '';
+  checkAuth();
+}
+
+function tryBiometric(){
+  /* Vérifier si un PIN local est déjà enregistré */
+  var hasPinData = false;
+  try{ hasPinData = !!localStorage.getItem(_PIN_KEY_DATA); } catch(e){}
   var input  = document.getElementById('auth-input');
-  var errEl  = document.getElementById('auth-error');
-  var bioBtn = document.getElementById('auth-bio-btn');
-  if (!window.PublicKeyCredential || !navigator.credentials) {
-    if(errEl) errEl.textContent = '⚠️ Biométrie non supportée sur ce navigateur';
+  var pwd    = input ? input.value.trim() : '';
+
+  if(hasPinData && !pwd){
+    /* PIN enregistré + pas de mot de passe saisi → déverrouiller avec PIN */
+    pinUnlock();
     return;
   }
-  var storedCid = null; var storedPwd = null;
-  try { storedCid = localStorage.getItem('_fnpos_bio_cid'); storedPwd = localStorage.getItem('_fnpos_bio_pwd'); } catch(e){}
-  if (!storedCid || !storedPwd) {
-    /* Première utilisation : demande le mot de passe puis enregistre */
-    var pwd = input.value.trim();
-    if (!pwd) {
-      if(errEl){ errEl.style.color='#FFD580'; errEl.textContent='💡 Entrez votre mot de passe dans le champ, puis cliquez à nouveau sur ce bouton pour enregistrer la biométrie'; }
-      return; /* NE PAS appeler input.focus() — déclenche le gestionnaire de mots de passe */
-    }
-    if(errEl){ errEl.style.color='rgba(255,255,255,.5)'; errEl.textContent='🔒 Enregistrement… validez avec Windows Hello / votre empreinte'; }
-    try {
-      var ch1 = new Uint8Array(32); crypto.getRandomValues(ch1);
-      var newCred = await navigator.credentials.create({ publicKey:{
-        challenge: ch1,
-        rp: { id: _BIO_RP_ID, name: _BIO_RP_NAME },
-        user: { id: _BIO_UID, name: 'admin', displayName: 'Admin FNPOS-CGT' },
-        pubKeyCredParams: [{ alg:-7,type:'public-key' },{ alg:-257,type:'public-key' }],
-        authenticatorSelection: { authenticatorAttachment:'platform', userVerification:'required', residentKey:'preferred' },
-        timeout: 60000, attestation: 'none'
-      }});
-      if (newCred) {
-        try { localStorage.setItem('_fnpos_bio_cid', _b64u(newCred.rawId));
-              localStorage.setItem('_fnpos_bio_pwd', btoa(unescape(encodeURIComponent(pwd)))); } catch(ls){}
-        if(bioBtn) bioBtn.textContent = '🪪 Biométrie / PIN (activé ✓)';
-        if(errEl){ errEl.style.color='#1D9E75'; errEl.textContent='✅ Biométrie enregistrée ! Connexion sans mot de passe activée.'; }
-      }
-    } catch(e) {
-      if(errEl){ errEl.style.color='#ff7070'; errEl.textContent='❌ '+(e.name==='NotAllowedError'?'Annulé ou non autorisé':e.message||e.name); }
-      /* PAS de input.focus() ici */
-    }
+  if(pwd){
+    /* Mot de passe saisi → proposer d'enregistrer le PIN */
+    pinSetup();
     return;
   }
-  /* Authentification avec la biométrie enregistrée */
-  if(errEl){ errEl.style.color='rgba(255,255,255,.5)'; errEl.textContent='🔒 Validez avec Windows Hello / votre empreinte…'; }
-  try {
-    var ch2 = new Uint8Array(32); crypto.getRandomValues(ch2);
-    var authCred = await navigator.credentials.get({ publicKey:{
-      challenge: ch2,
-      rpId: _BIO_RP_ID,
-      allowCredentials: [{ type:'public-key', id: _b64d(storedCid), transports:['internal'] }],
-      userVerification: 'required',
-      timeout: 60000
-    }});
-    if (authCred) {
-      try { input.value = decodeURIComponent(escape(atob(storedPwd))); } catch(de){ input.value = atob(storedPwd); }
-      if(errEl) errEl.textContent = '';
-      checkAuth();
-    }
-  } catch(e) {
-    if(errEl){ errEl.style.color='#ff7070'; errEl.textContent='❌ '+(e.name==='NotAllowedError'?'Annulé ou non autorisé':e.message||e.name); }
-    /* PAS de input.focus() ici */
-  }
+  /* Aucun PIN, aucun mot de passe → guide */
+  var errEl = document.getElementById('auth-error');
+  if(errEl){errEl.style.color='#FFD580';errEl.textContent='💡 Entrez votre mot de passe et cliquez à nouveau pour créer un code PIN d\'accès rapide.';}
 }
 
 /* Mettre à jour les éléments de page selon le secteur
@@ -1850,10 +1856,9 @@ function goView(id, evt) {
     if (overlay) overlay.style.display = 'flex';
     /* Bio button */
     try {
-      if (localStorage.getItem('_fnpos_bio_cid')) {
+      var hasPinBtn = !!localStorage.getItem('_fnpos_pin_data');
         var bb = document.getElementById('auth-bio-btn');
-        if (bb) { bb.style.display = 'block'; bb.textContent = '🪪 Biométrie / PIN (activé ✓)'; }
-      }
+        if (bb) { bb.style.display = 'block'; bb.textContent = hasPinBtn ? '🔢 Connexion par code PIN (activé ✓)' : '🔢 Créer un code PIN d\'accès rapide'; }
     } catch(e) {}
   } else {
     /* Already authenticated for this sector */
