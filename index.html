@@ -1377,6 +1377,186 @@ async function tryBiometric() {
   <div id="adh-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;padding:8px 0"></div>
 </div>
 
+<!-- EMAILING -->
+<div class="tp" id="tp-emailing">
+  <div class="em-layout">
+    <div class="em-panel">
+      <div class="em-section-title">Destinataires</div>
+      <div class="em-type-btns">
+        <button class="em-type-btn on" id="em-type-ud" onclick="emSetType('ud')">UD</button>
+        <button class="em-type-btn" id="em-type-ul" onclick="emSetType('ul')">UL</button>
+        <button class="em-type-btn" id="em-type-str" onclick="emSetType('str')">Structures</button>
+        <button class="em-type-btn" id="em-type-adh" onclick="emSetType('adh')">Adh&eacute;rents</button>
+      </div>
+      <div class="em-filters" id="em-filters-zone">
+        <select id="em-f-region" onchange="emRefreshList()">
+          <option value="">&mdash; Toutes r&eacute;gions &mdash;</option>
+        </select>
+        <select id="em-f-dept" onchange="emRefreshList()">
+          <option value="">&mdash; Tous d&eacute;partements &mdash;</option>
+        </select>
+        <input type="text" id="em-f-search" placeholder="Recherche nom / ville&hellip;" oninput="emRefreshList()">
+      </div>
+      <div class="em-sel-bar">
+        <span id="em-sel-count">0 s&eacute;lectionn&eacute;(s)</span>
+        <span>
+          <button class="em-sel-link" onclick="emSelectAll()">Tout cocher</button>
+          &nbsp;&middot;&nbsp;
+          <button class="em-sel-link" onclick="emSelectNone()">Tout d&eacute;cocher</button>
+        </span>
+      </div>
+      <div class="em-recipient-list" id="em-recipient-list">
+        <div class="em-empty">Choisissez un type de source ci-dessus.</div>
+      </div>
+    </div>
+    <div class="em-form">
+      <div class="em-section-title">Composition du message</div>
+      <div class="em-field">
+        <label>&Agrave; (destinataires)</label>
+        <div class="em-to-wrap">
+          <input type="text" id="em-to" placeholder="S&eacute;lectionnez des destinataires &agrave; gauche&hellip;" readonly>
+          <span class="em-to-count" id="em-to-count"></span>
+        </div>
+      </div>
+      <div class="em-field">
+        <label>Cc</label>
+        <input type="text" id="em-cc" placeholder="cc@exemple.fr, cc2@exemple.fr">
+      </div>
+      <div class="em-field">
+        <label>Cci</label>
+        <input type="text" id="em-bcc" placeholder="cci@exemple.fr">
+      </div>
+      <div class="em-field">
+        <label>Objet</label>
+        <input type="text" id="em-subject" placeholder="Objet du message&hellip;">
+      </div>
+      <div class="em-field">
+        <label>Corps du message</label>
+        <textarea id="em-body" placeholder="R&eacute;digez votre message ici&hellip;"></textarea>
+      </div>
+      <div class="em-ejs-config" id="em-ejs-config" style="background:var(--bg2);border:1px solid var(--bd);border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:11px;">
+        <div style="font-weight:700;color:#E24B4A;margin-bottom:6px">&#9881;&#65039; Configuration EmailJS</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+          <div>
+            <label style="font-size:10px;color:var(--tx3);display:block;margin-bottom:2px">Service ID</label>
+            <input type="text" id="ejs-service-id" placeholder="service_xxxxxxx" style="width:100%;padding:4px 6px;border:1px solid var(--bd);border-radius:4px;font-size:11px;background:var(--bg);color:var(--tx);" oninput="ejsSaveConfig()">
+          </div>
+          <div>
+            <label style="font-size:10px;color:var(--tx3);display:block;margin-bottom:2px">Template ID</label>
+            <input type="text" id="ejs-template-id" placeholder="template_xxxxxxx" style="width:100%;padding:4px 6px;border:1px solid var(--bd);border-radius:4px;font-size:11px;background:var(--bg);color:var(--tx);" oninput="ejsSaveConfig()">
+          </div>
+        </div>
+        <div style="font-size:10px;color:var(--tx3)">Cl&eacute; publique : <code>7A66UBcq5moSe8_hy</code> &#10003; &nbsp;|&nbsp; Cr&eacute;ez service et template sur <a href="https://www.emailjs.com" target="_blank" style="color:#185fa5">emailjs.com</a></div>
+      </div>
+      <div class="em-actions">
+        <button class="em-btn em-btn-send" onclick="emSendEmailJS()">&#128228; Envoyer (EmailJS)</button>
+        <button class="em-btn em-btn-mailto" onclick="emOpenMailto()">&#128231; Ouvrir dans mail</button>
+        <button class="em-btn em-btn-copy" onclick="emCopyAddresses()">&#128203; Copier adresses</button>
+      </div>
+      <div class="em-status" id="em-status"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CONQUÊTE -->
+<div class="tp" id="tp-conquete">
+  <div class="krow">
+    <div class="kpi">
+      <div class="kl">Zones Blanches</div>
+      <div class="kv" id="kpi-zones-blanches">--</div>
+      <div class="ks">ACI sans contact CGT</div>
+    </div>
+    <div class="kpi">
+      <div class="kl">En cours d'approche</div>
+      <div class="kv" id="kpi-approche">--</div>
+      <div class="ks">Actions terrain lanc&eacute;es</div>
+    </div>
+  </div>
+  <div class="mwrap">
+    <div class="ph">Pilotage des Implantations</div>
+    <div class="fbar" style="margin-bottom:10px;">
+      <input type="text" id="cq-search" placeholder="Rechercher..." oninput="renderConquete()" style="width:170px">
+      <label>R&eacute;gion <select id="cq-reg-filter" onchange="renderConquete()"><option value="">Toutes</option></select></label>
+      <label><span id="ccn-cq-label">CCN ACI</span> <select id="cq-aci-filter" onchange="renderConquete()">
+        <option value="">Tous</option>
+        <option value="OUI">OUI</option>
+        <option value="NON">NON</option>
+        <option value="VIDE">Non renseign&eacute;</option>
+      </select></label>
+      <label>Statut <select id="cq-st-filter" onchange="renderConquete()">
+        <option value="">Tous</option>
+        <option value="0">&#9898; N&eacute;ant</option>
+        <option value="1">&#128992; Approche</option>
+        <option value="2">&#128994; Constitution</option>
+        <option value="3">&#128993; Implantation</option>
+        <option value="4">&#128977; UD/UL contact&eacute;es</option>
+      </select></label>
+    </div>
+    <div id="cq-pager-top" style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;padding:6px 2px;font-size:11px;color:var(--tx2);min-height:30px"></div>
+    <div id="conquete-list" class="slist" style="max-height:600px;overflow-y:auto;"></div>
+    <div id="cq-pager-bot" style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;padding:6px 2px;font-size:11px;color:var(--tx2);min-height:30px;margin-top:4px"></div>
+  </div>
+</div>
+
+<!-- OUTILS & RESSOURCES -->
+<div class="tp" id="tp-outils">
+  <div class="export-zone" style="background:var(--bg2);border-radius:var(--rl);padding:14px 16px;margin-bottom:16px;border:1px solid var(--bd)">
+    <div class="ph" style="margin-bottom:6px">&#11015; Exports</div>
+    <p style="font-size:12px;color:var(--tx2);margin-bottom:10px">Utilisez les filtres du Tableau avant d&rsquo;exporter pour affiner la s&eacute;lection.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:8px">
+      <button class="ebtn" onclick="doCSV(true)">&#11015; XLSX &mdash; donn&eacute;es filtr&eacute;es</button>
+      <button class="ebtn" onclick="goTab('tableau');setTimeout(exportCSV,200)" style="background:#185fa5;color:#fff;border-color:#185fa5">&#128203; XLSX tableau actif</button>
+    </div>
+    <div style="margin-top:12px;font-size:11px;font-weight:700;color:var(--tx3);margin-bottom:6px">Aper&ccedil;u &mdash; 10 premi&egrave;res lignes</div>
+    <div class="tscroll"><table><thead><tr><th>Structure</th><th>R&eacute;gion</th><th>D&eacute;pt.</th><th>Ville</th><th>SIRET</th><th id="th-ccn">CCN ACI</th><th>T&eacute;l</th><th>Email</th></tr></thead><tbody id="exp-body"></tbody></table></div>
+  </div>
+  <div class="ph">&#128218; Biblioth&egrave;que</div>
+  <div class="ps">Documents disponibles &mdash; Acc&egrave;s libre + administration par code PIN</div>
+  <div style="padding:16px;">
+    <div id="biblio-public-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:24px;"></div>
+    <div style="border-top:1px solid var(--bd);padding-top:14px;">
+      <div id="biblio-inline-auth">
+        <button onclick="showBiblioInlinePin()" style="padding:6px 14px;background:transparent;border:1px solid var(--bd2);border-radius:6px;cursor:pointer;font-size:11px;color:var(--tx2);">&#9881; Administration</button>
+      </div>
+      <div id="biblio-inline-pin-block" style="display:none;background:var(--bg2);border-radius:var(--rl);padding:16px;max-width:320px;margin-top:8px;">
+        <div style="font-size:12px;font-weight:700;margin-bottom:10px;color:var(--tx);">Code PIN administrateur</div>
+        <input type="password" id="biblio-inline-pin-input" maxlength="12" placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;" style="padding:9px;border:1px solid var(--bd2);border-radius:5px;font-size:18px;letter-spacing:5px;text-align:center;width:100%;box-sizing:border-box;background:var(--bg);color:var(--tx);" onkeydown="if(event.key==='Enter')checkBiblioInlinePin();" />
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button onclick="checkBiblioInlinePin()" style="flex:1;padding:8px;background:#185fa5;color:#fff;border:none;border-radius:5px;cursor:pointer;font-weight:700;">Acc&eacute;der</button>
+          <button onclick="hideBiblioInlinePin()" style="padding:8px 12px;background:transparent;border:1px solid var(--bd2);border-radius:5px;cursor:pointer;color:var(--tx2);">Annuler</button>
+        </div>
+        <div id="biblio-inline-pin-error" style="display:none;color:#E24B4A;font-size:11px;margin-top:6px;"></div>
+      </div>
+      <div id="biblio-admin-panel" style="display:none;margin-top:10px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <span style="font-size:12px;color:#1D9E75;font-weight:700;">&#10003; Mode administration actif</span>
+          <button onclick="lockBiblioAdmin()" style="padding:4px 12px;background:transparent;border:1px solid var(--bd2);border-radius:5px;cursor:pointer;font-size:11px;color:var(--tx2);">&#128274; Verrouiller</button>
+        </div>
+        <button onclick="toggleBiblioAddForm()" class="biblio-add-btn">&#43; Ajouter un document</button>
+        <div id="biblio-add-form" style="display:none;background:var(--bg3);border-radius:10px;padding:14px;margin-top:10px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+            <div><label style="font-size:10px;font-weight:700;color:var(--tx3);display:block;margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px;">Titre *</label><input id="ba-titre" placeholder="Titre du document" style="width:100%;padding:6px 9px;border:1px solid var(--bd2);border-radius:6px;background:var(--bg);color:var(--tx);font-size:12px;box-sizing:border-box;" /></div>
+            <div><label style="font-size:10px;font-weight:700;color:var(--tx3);display:block;margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px;">Cat&eacute;gorie</label><input id="ba-cat" placeholder="ex : Juridique" style="width:100%;padding:6px 9px;border:1px solid var(--bd2);border-radius:6px;background:var(--bg);color:var(--tx);font-size:12px;box-sizing:border-box;" /></div>
+          </div>
+          <div style="margin-bottom:8px;"><label style="font-size:10px;font-weight:700;color:var(--tx3);display:block;margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px;">Ic&ocirc;ne (emoji)</label><input id="ba-icon" placeholder="&#128196;" maxlength="4" style="width:100%;padding:6px 9px;border:1px solid var(--bd2);border-radius:6px;background:var(--bg);color:var(--tx);font-size:12px;box-sizing:border-box;" /></div>
+          <div id="biblio-drop-zone" class="biblio-file-drop" onclick="document.getElementById('biblio-file-input').click()">
+            <div style="font-size:12px;color:var(--tx2);">&#128206; Cliquez ou glissez un fichier ici</div>
+            <div style="font-size:10px;color:var(--tx3);margin-top:3px;">PDF, HTML, TXT &mdash; max 5 Mo</div>
+            <input type="file" id="biblio-file-input" accept=".pdf,.html,.htm,.txt,.md" onchange="biblioPicked(this)" />
+          </div>
+          <div id="biblio-file-name" class="biblio-file-name"></div>
+          <div id="ba-error" style="display:none;color:#E24B4A;font-size:11px;margin:6px 0;"></div>
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <button id="ba-save-btn" onclick="saveBiblioDoc()" style="flex:1;padding:8px;background:#185fa5;color:#fff;border:none;border-radius:5px;cursor:pointer;font-weight:700;">Enregistrer</button>
+            <button onclick="toggleBiblioAddForm()" style="padding:8px 12px;background:transparent;border:1px solid var(--bd2);border-radius:5px;cursor:pointer;color:var(--tx2);">Annuler</button>
+          </div>
+        </div>
+        <div id="biblio-docs-list" style="margin-top:14px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- EXPORT -->
 <div class="tp" id="tp-export" style="display:none!important"></div>
 
@@ -6738,7 +6918,7 @@ function emSetStatus(cls, msg) {
 function emInit() { emPopulateFilters(); emRefreshList(); }
 /* -- Hook goTab pour emailing -- */
 var _origGoTab = window.goTab;
-window.goTab = function(name) { _origGoTab(name); if (name === 'emailing') window.setTimeout(emInit, 80); if (name === 'secteur') window.setTimeout(buildSecteurTab, 80); if (name === 'federation') window.setTimeout(buildFedTab, 80); };
+window.goTab = function(name) { _origGoTab(name); if (name === 'emailing') window.setTimeout(emInit, 80); if (name === 'conquete') window.setTimeout(renderConquete, 80); if (name === 'outils') window.setTimeout(renderBiblioTab, 80); if (name === 'secteur') window.setTimeout(buildSecteurTab, 80); if (name === 'federation') window.setTimeout(buildFedTab, 80); };
 
 /* ═══════════════════════════════════════════════
    ONGLET SECTEUR — buildSecteurTab()
