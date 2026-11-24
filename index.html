@@ -1829,6 +1829,7 @@ var UD_DATA = [{"code":10,"nom":"AIN UD CGT","adr":"MAISON DES SYNDICATS","cp":"
 var UD_MAP = {};           // dept-code → {n, t, e}  built by initUDMaps()
 var CP_UL_MAP = {};        // postal-code → [ul-codes] built by initUDMaps()
 var REGION_UD_MAP = {};    // region-name → [{code,nom,…}] built by initUDMaps()
+var UL_INDEX = {};         // ul-code (string) → {n, v, t, e}  — populated when UL data loaded
 
 function initUDMaps() {
   var m = {}, cm = {}, rm = {};
@@ -5025,8 +5026,9 @@ function getFiltered(){
   var hasCol=tfN||tfR||tfV||tfSi||tfCc||tfGa||tfDe||tfPr||tfTl||tfInMin||tfInMax||tfPaMin||tfPaMax;
   var btn=document.getElementById("tf-clear-btn");if(btn)btn.style.display=hasCol?"inline-block":"none";
   var out=[];
-  for(var i=0;i<STRUCTS.length;i++){
+  for(var i=0;i<STRUCTS.length;i++){try{
     var s=STRUCTS[i];
+    if(!s)continue;
     var nom=g(s,"n")||"",ville=g(s,"v")||"",region=g(s,"r")||"";
     var ccn=String(g(s,"cc")||"").toUpperCase(),gan=String(g(s,"ga")||"").toUpperCase(),pa=gf(s,"pa");
     var inscr=gi(s,"in")||0,siret=(g(s,"si")||"").toLowerCase();
@@ -5055,7 +5057,7 @@ function getFiltered(){
     if(tfTl&&tl.indexOf(tfTl)===-1&&em.indexOf(tfTl)===-1)continue;
     var _tfCq=gcf("tf-cq");if(_tfCq!==''){var _cqSt2=conqueteStatus[siret]||0;if(parseInt(_tfCq)!==_cqSt2)continue;}
     out.push(s);
-  }
+  }catch(_gfErr){console.error('[getFiltered] struct '+i,_gfErr);}}
   return out;
 }
 function buildTable(keepPage){
@@ -5491,7 +5493,7 @@ function buildCal(){
     h+='<span style="font-size:14px;font-weight:900;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.25)">'+_MNAMES[_mM]+" "+_mY+"</span>";
     h+='<span style="font-size:10px;font-weight:700;color:'+_mc+';background:rgba(255,255,255,.92);padding:2px 10px;border-radius:10px">'+_mItems.length+" \u00e9lection"+(_mItems.length>1?"s":"")+'</span>';
     h+='</div>';
-    for(var ii=0;ii<_mItems.length;ii++){
+    for(var ii=0;ii<_mItems.length;ii++){try{
       var s=_mItems[ii].s,ts=_mItems[ii].ts;
       var days=Math.round((ts-now)/86400);
       var urg=days<0?"s2":days<30?"s2":days<90?"s1":"";
@@ -5537,6 +5539,7 @@ function buildCal(){
         +(g(s,"de")?'<div style="font-size:10px;color:var(--tx3);margin-top:2px">Derni\u00e8re : '+fmtDateDisp(g(s,"de"))+'</div>':"")
         +(g(s,"cc")?'<div style="margin-top:3px"><span class="badge" style="background:'+(String(g(s,"cc")).toUpperCase()==="OUI"?"#0f6e56":"#888")+'">'+(typeof CFG!=='undefined'&&CFG.short?'CCN '+CFG.short:'CCN ACI')+' '+g(s,"cc")+'</span></div>':"");
       h+=refHtml+renderUDBlock(g(s,"cp"))+'</div></div>';
+    }catch(_itemErr){console.error('[buildCal] item '+ii,_itemErr);}
     }
     h+='</div>';
   }
