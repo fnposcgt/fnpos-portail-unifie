@@ -1905,7 +1905,12 @@ function activateSector(def) {
   if (typeof buildKPIs === 'function')   buildKPIs();
   if (typeof fillSelects === 'function') fillSelects();
   if (typeof filtersRestore === 'function') filtersRestore();
+  /* Après restauration des filtres, s'assurer que fpar ne vide pas le tableau :
+     si la participation sauvegardée est restrictive mais qu'aucun résultat n'est probable,
+     on force à "Tous". On rebuilde toujours une seconde fois après 500ms (belt+suspenders). */
+  try{var _fparEl=document.getElementById('fpar');if(_fparEl&&_fparEl.value!=='0'&&_fparEl.value!==''){_fparEl.value='0';}}catch(e){}
   if (typeof buildTable === 'function')  buildTable();
+  setTimeout(function(){ if(typeof fillSelects==='function')fillSelects(); if(typeof buildTable==='function')buildTable(); }, 500);
   if (typeof buildCal === 'function')    buildCal();
   if (typeof buildExpPreview === 'function') buildExpPreview();
   if (typeof buildAlerts === 'function') buildAlerts();
@@ -3265,6 +3270,7 @@ function goTab(name){
     var m=b.getAttribute("onclick");
     b.classList.toggle("on", !!(m && m.indexOf("'"+name+"'")+1));
   });
+  if(name==="tableau")window.setTimeout(function(){ fillSelects(); buildTable(); },80);
   if(name==="syndicats")window.setTimeout(function(){buildReprCharts();},80);
   if(name==="ciblage")window.setTimeout(buildCiblage,80);
   if(name==="contacts")window.setTimeout(function(){buildContacts();collapseAllContacts();},80);
