@@ -4207,6 +4207,8 @@ function getAdhCount(){
 }
 
 function buildKPIs(){
+  /* Recalcul GS avec STRUCTS courant pour cohérence secteur (Fix: toujours sync) */
+  if(typeof buildGS==='function') buildGS();
   /* Stats depuis GS (données nationales du secteur courant ACI ou ML) */
   var sectName = (typeof CFG!=='undefined'&&CFG.sub) ? CFG.sub.split(' \u00b7 ')[0] : 'Ateliers Chantiers d\'Insertion';
   var sectShort= (typeof CFG!=='undefined'&&CFG.short) ? CFG.short : 'ACI';
@@ -6122,6 +6124,12 @@ function syncPull(onDone) {
   xhr.setRequestHeader('Authorization', 'Bearer ' + SUPABASE_ANON_KEY);
   xhr.timeout = 8000;
   xhr.onload = function() {
+    /* Garde anti-XHR périmé : si le secteur a changé depuis le démarrage, on ignore */
+    if(SEC_CFG.syncTbl !== _syncTbl) {
+      console.log('[Sync] Pull ignoré — secteur changé (' + _syncTbl + ' → ' + (SEC_CFG.syncTbl||'?') + ')');
+      if(onDone) onDone();
+      return;
+    }
     if(xhr.status === 200) {
       try {
         var rows = JSON.parse(xhr.responseText);
