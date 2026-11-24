@@ -7288,19 +7288,35 @@ window.addEventListener('hashchange', function() {
     /* Adhérents CGT */
     var si3 = s.si || '';
     var adhLst = (typeof ADHERENTS !== 'undefined' && ADHERENTS[si3]) ? ADHERENTS[si3] : [];
-    var adhActifs = adhLst.filter(function(a){ return a.arc!=='OUI'; });
-    if(adhActifs.length>0){
+    if(adhLst.length>0){
+      var adhActifs2 = adhLst.filter(function(a){ return a.arc!=='OUI'; });
+      var adhArch2 = adhLst.filter(function(a){ return a.arc==='OUI'; });
       h += '<div style="padding:14px 20px 0">';
-      h += '<div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Adhérents CGT ('+adhActifs.length+')</div>';
-      h += '<div style="background:rgba(226,75,74,.06);border-left:3px solid #E24B4A;border-radius:0 8px 8px 0;padding:8px 12px">';
-      for(var ai2=0;ai2<adhActifs.length;ai2++){
-        var a = adhActifs[ai2];
-        var nm = [(a.pr||''), (a.nm||a.n||'')].filter(Boolean).join(' ');
-        h += '<div style="font-size:11px;padding:3px 0;border-bottom:1px solid rgba(226,75,74,.12)">'+nm;
-        if(a.mt) h += ' <span style="font-size:9px;color:var(--tx3)">['+a.mt+']</span>';
+      h += '<div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Adhérents CGT ('+adhActifs2.length+(adhArch2.length?' + '+adhArch2.length+' archivé'+(adhArch2.length>1?'s':''):'')+')</div>';
+      h += '<div style="display:flex;flex-direction:column;gap:4px">';
+      for(var ai2=0;ai2<adhLst.length;ai2++){
+        var a = adhLst[ai2];
+        var isArchived = a.arc==='OUI';
+        var fullNomA = (a.civ ? a.civ+' ' : '')+( a.pre||'')+' '+(a.nom||'');
+        h += '<div class="fiche-cnt-row" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:4px 0;border-bottom:1px solid var(--bd2)'+(isArchived?';opacity:.55;font-style:italic':'')+'">';
+        h += '<span style="font-size:9px;background:#6c54a4;color:#fff;padding:1px 7px;border-radius:8px;flex-shrink:0;white-space:nowrap">Adhérent</span>';
+        h += '<span style="font-weight:600;font-size:11px">'+fullNomA.trim()+'</span>';
+        if(isArchived) h += '<span style="font-size:9px;color:var(--tx3)">(archivé)</span>';
+        if(a.mandats&&a.mandats.length) h += '<span style="font-size:8px;background:#9B59B6;color:#fff;padding:1px 5px;border-radius:6px">'+a.mandats.join(' · ')+'</span>';
+        if(a.mandats_nat&&a.mandats_nat.length) h += '<span style="font-size:8px;background:#E24B4A;color:#fff;padding:1px 5px;border-radius:6px">⌂ '+a.mandats_nat.join(' · ')+'</span>';
+        if(a.formations&&a.formations.length) h += '<span style="font-size:8px;background:#27AE60;color:#fff;padding:1px 5px;border-radius:6px">'+a.formations.join(' · ')+'</span>';
+        if(a.tel) h += '<a href="tel:'+a.tel.replace(/\s/g,'')+'" style="color:var(--tx3);font-size:10px;text-decoration:none">&#9990; '+a.tel+'</a>';
+        if(a.em) h += '<a href="mailto:'+a.em+'" style="color:#185fa5;font-size:10px;text-decoration:none">&#9993; '+a.em+'</a>';
         h += '</div>';
       }
-      h += '</div></div>';
+      h += '</div>';
+      if(!IS_READONLY) h += '<button class="btn-add-small" onclick="editAdhOpen(\''+si3+'\',999)" style="margin-top:6px">&#43; Ajouter un adhérent</button>';
+      h += '</div>';
+    } else if(!IS_READONLY){
+      h += '<div style="padding:14px 20px 0">';
+      h += '<div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Adhérents CGT</div>';
+      h += '<button class="btn-add-small" onclick="editAdhOpen(\''+si3+'\',999)">&#43; Ajouter un adhérent</button>';
+      h += '</div>';
     }
 
     /* Responsables CGT de région */
@@ -7313,20 +7329,22 @@ window.addEventListener('hashchange', function() {
       if(allReg > 0){
         h += '<div style="padding:14px 20px 0">';
         h += '<div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Responsables CGT — '+s.r+'</div>';
-        h += '<div style="background:rgba(24,95,165,.06);border-left:3px solid #185fa5;border-radius:0 8px 8px 0;padding:8px 12px">';
-        var allPeople = [];
-        if(rRefts.length){ allPeople.push({label:'Référent·e',list:rRefts}); }
-        if(rResps.length){ allPeople.push({label:'Responsable',list:rResps}); }
-        for(var rgi=0;rgi<allPeople.length;rgi++){
-          var grp=allPeople[rgi];
+        h += '<div style="display:flex;flex-direction:column;gap:4px">';
+        var fRoles=[
+          {key:'referents',   label:'Référent groupe élections', color:'#E24B4A', list:rRefts},
+          {key:'membres_cef', label:'Élu·e CEF',                 color:'#185fa5', list:rMembs},
+          {key:'responsables',label:'Responsable de région',     color:'#0f6e56', list:rResps}
+        ];
+        for(var rgi=0;rgi<fRoles.length;rgi++){
+          var grp=fRoles[rgi];
           for(var rpi=0;rpi<grp.list.length;rpi++){
             var rp=grp.list[rpi];
             if(!rp.nom)continue;
-            h += '<div style="font-size:11px;padding:4px 0;border-bottom:1px solid rgba(24,95,165,.1);display:flex;align-items:center;gap:8px;flex-wrap:wrap">';
+            h += '<div style="font-size:11px;padding:4px 0;border-bottom:1px solid var(--bd2);display:flex;align-items:center;gap:8px;flex-wrap:wrap">';
+            h += '<span style="font-size:9px;background:'+grp.color+';color:#fff;padding:1px 7px;border-radius:8px;flex-shrink:0;white-space:nowrap">'+grp.label+'</span>';
             h += '<span style="font-weight:600;color:var(--tx)">'+rp.nom+'</span>';
-            h += '<span style="font-size:9px;color:var(--tx3);background:var(--bg2);padding:1px 6px;border-radius:8px">'+grp.label+'</span>';
-            if(rp.tel) h += '<a href="tel:'+rp.tel+'" style="font-size:10px;color:#185fa5;text-decoration:none">📞 '+rp.tel+'</a>';
-            if(rp.email) h += '<a href="mailto:'+rp.email+'" style="font-size:10px;color:#185fa5;text-decoration:none">✉ '+rp.email+'</a>';
+            if(rp.tel) h += '<a href="tel:'+rp.tel+'" style="font-size:10px;color:'+grp.color+';text-decoration:none">&#9990; '+rp.tel+'</a>';
+            if(rp.email) h += '<a href="mailto:'+rp.email+'" style="font-size:10px;color:'+grp.color+';text-decoration:none">&#9993; '+rp.email+'</a>';
             h += '</div>';
           }
         }
