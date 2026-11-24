@@ -932,6 +932,8 @@ function authSuccess() {
 /* ═══ ACCÈS RAPIDE : CODE PIN LOCAL (4–8 chiffres) ═══ */
 /* Alternative fiable à WebAuthn — fonctionne sur tous les navigateurs/PC */
 var _PIN_KEY_DATA = '_fnpos_pin_data'; /* {hash, pwd} en localStorage */
+/* Nettoyage des anciennes clés WebAuthn (migration) */
+try{ localStorage.removeItem('_fnpos_bio_cid'); localStorage.removeItem('_fnpos_bio_pwd'); }catch(e){}
 
 function _pinHash(pin, salt){
   /* hash simple : SHA-256 simulé avec XOR + somme pour compatibilité universelle */
