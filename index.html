@@ -4447,7 +4447,7 @@ function buildCiblage(){
       h+=urgHtml+'</div></div>'
         +'<div class="cci">'+sReg+'</div>'
         +addrHtml
-        +(g(s,"de")?'<div style="font-size:10px;color:var(--tx3);margin-top:2px">Derni\u00e8re : '+g(s,"de")+'</div>':"")
+        +(g(s,"de")?'<div style="font-size:10px;color:var(--tx3);margin-top:2px">Derni\u00e8re : '+fmtDateDisp(g(s,"de"))+'</div>':"")
         +(gan?'<div style="margin-top:3px"><span class="badge" style="background:'+uc(gan)+'">'+gan+'</span></div>':"");
       h+=renderUDBlock(g(s,"cp"))+'</div></div>';
     }
@@ -5293,6 +5293,48 @@ function buildReprCharts(){
   }
 }
 
+/* Helper : parse pr/de en DD/MM/YYYY ou YYYY-MM-DD → {y,m,d} (m=0-based) */
+function parsePr(pr){
+  if(!pr)return null;
+  if(pr.indexOf('-')>0){var p=pr.split('-');if(p.length!==3)return null;return{y:parseInt(p[0]),m:parseInt(p[1])-1,d:parseInt(p[2])};}
+  var p=pr.split('/');if(p.length!==3)return null;return{y:parseInt(p[2]),m:parseInt(p[1])-1,d:parseInt(p[0])};
+}
+/* Affichage date ISO→DD/MM/YYYY */
+function fmtDateDisp(pr){
+  var pp=parsePr(pr);if(!pp)return pr||'';
+  return ('0'+pp.d).slice(-2)+'/'+('0'+(pp.m+1)).slice(-2)+'/'+pp.y;
+}
+/* Grille calendrier mensuelle */
+function buildCalGrid(structs,year,month){
+  var DOW=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+  var byDay={};
+  for(var i=0;i<structs.length;i++){
+    var pp=parsePr(g(structs[i],'pr'));
+    if(!pp||pp.y!==year||pp.m!==month)continue;
+    if(!byDay[pp.d])byDay[pp.d]=[];
+    byDay[pp.d].push(structs[i]);
+  }
+  var h='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--bd);border-radius:var(--r);overflow:hidden">';
+  for(var i=0;i<7;i++)h+='<div class="cal-gh">'+DOW[i]+'</div>';
+  var firstMon=(new Date(year,month,1).getDay()+6)%7;
+  var daysInM=new Date(year,month+1,0).getDate();
+  var today=new Date();
+  for(var c=0;c<firstMon;c++)h+='<div class="cal-gd om"></div>';
+  for(var d=1;d<=daysInM;d++){
+    var isToday=(d===today.getDate()&&month===today.getMonth()&&year===today.getFullYear());
+    var evs=byDay[d]||[];
+    h+='<div class="cal-gd'+(isToday?' today':'')+'">';
+    h+='<div style="font-size:9px;font-weight:700;color:var(--tx3);text-align:right;margin-bottom:2px">'+d+'</div>';
+    for(var j=0;j<evs.length;j++){
+      var s=evs[j];var gan=g(s,'ga');
+      h+='<div onclick="openFiche(\''+g(s,'si')+'\')" style="cursor:pointer;font-size:9px;line-height:1.3;padding:2px 4px;margin-bottom:2px;border-radius:3px;background:'+(gan?uc(gan):'var(--bg3)')+';color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%" title="'+g(s,'n')+'">'+g(s,'n')+'</div>';
+    }
+    h+='</div>';
+  }
+  h+='</div>';
+  return h;
+}
+
 function buildCal(){
   var reg=document.getElementById("cal-reg").value;
   var hor=parseInt(document.getElementById("cal-hor").value)||12;
@@ -5313,9 +5355,9 @@ function buildCal(){
   for(var i=0;i<data.length;i++){
     var _pr2=g(data[i].s,"pr");
     if(!_pr2)continue;
-    var _pts2=_pr2.split("/");
-    if(_pts2.length!==3)continue;
-    var _mk2=_pts2[2]+"-"+("0"+_pts2[1]).slice(-2);
+    var _pp2=parsePr(_pr2);
+    if(!_pp2)continue;
+    var _mk2=_pp2.y+"-"+("0"+(_pp2.m+1)).slice(-2);
     if(!_byMonth[_mk2])_byMonth[_mk2]=[];
     _byMonth[_mk2].push(data[i]);
   }
@@ -5341,9 +5383,9 @@ function buildCal(){
       var urg=days<0?"s2":days<30?"s2":days<90?"s1":"";
       var urgTxt=days<0?'<span style="display:inline-flex;align-items:center;gap:4px;background:#E24B4A;color:#fff;font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px">&#9888; Pass\u00e9e</span>':days===0?'<span style="display:inline-flex;align-items:center;gap:4px;background:#E24B4A;color:#fff;font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px">&#9889; Aujourd\'hui</span>':days<=30?'<span style="display:inline-flex;align-items:center;gap:4px;background:#E24B4A;color:#fff;font-size:13px;font-weight:900;padding:4px 11px;border-radius:20px;box-shadow:0 2px 6px rgba(226,75,74,.4)">'+days+' j</span>':days<=90?'<span style="display:inline-flex;align-items:center;gap:4px;background:#EF9F27;color:#fff;font-size:13px;font-weight:900;padding:4px 11px;border-radius:20px;box-shadow:0 2px 6px rgba(239,159,39,.4)">'+days+' j</span>':'<span style="display:inline-flex;align-items:center;gap:4px;background:var(--bg3);color:var(--tx2);font-size:12px;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid var(--bd)">'+days+' j</span>';
       var gan=g(s,"ga"),sReg=g(s,"r");
-      var prPts=(g(s,"pr")||"").split("/");
-      var dayNum=prPts.length===3?parseInt(prPts[0]):0;
-      var dow=dayNum>0?_DNAMES[new Date(parseInt(prPts[2]),parseInt(prPts[1])-1,dayNum).getDay()]:"";
+      var _pp3=parsePr(g(s,"pr")||"");
+      var dayNum=_pp3?_pp3.d:0;
+      var dow=(_pp3&&dayNum>0)?_DNAMES[new Date(_pp3.y,_pp3.m,_pp3.d).getDay()]:"";
       var refHtml="";
       var cntData=CONTACTS_BY_REGION[sReg];
       if(cntData){
@@ -5378,7 +5420,7 @@ function buildCal(){
         +urgTxt+'</div></div>'
         +'<div class="cci">'+sReg+'</div>'
         +addrHtml+structContact
-        +(g(s,"de")?'<div style="font-size:10px;color:var(--tx3);margin-top:2px">Derni\u00e8re : '+g(s,"de")+'</div>':"")
+        +(g(s,"de")?'<div style="font-size:10px;color:var(--tx3);margin-top:2px">Derni\u00e8re : '+fmtDateDisp(g(s,"de"))+'</div>':"")
         +(g(s,"cc")?'<div style="margin-top:3px"><span class="badge" style="background:'+(g(s,"cc").toUpperCase()==="OUI"?"#0f6e56":"#888")+'">'+(typeof CFG!=='undefined'&&CFG.short?'CCN '+CFG.short:'CCN ACI')+' '+g(s,"cc")+'</span></div>':"");
       h+=refHtml+renderUDBlock(g(s,"cp"))+'</div></div>';
     }
