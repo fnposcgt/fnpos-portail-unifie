@@ -1018,7 +1018,7 @@ async function tryBiometric() {
     <div class="stat-card">
       <div class="stat-num" id="stat-sectors-live">2</div>
       <div class="stat-lbl">Secteurs actifs</div>
-      <div class="stat-src">sur 8 total</div>
+      <div class="stat-src">sur 8 en préparation</div>
     </div>
     <div class="stat-card">
       <div class="stat-num" id="stat-adh-aci">—</div>
@@ -1026,14 +1026,9 @@ async function tryBiometric() {
       <div class="stat-src" id="stat-adh-aci-ts">sync en cours…</div>
     </div>
     <div class="stat-card">
-      <div class="stat-num" id="stat-adh-ml">—</div>
-      <div class="stat-lbl">Adhérents ML</div>
-      <div class="stat-src" id="stat-adh-ml-ts">sync en cours…</div>
-    </div>
-    <div class="stat-card">
       <div class="stat-num" id="stat-adh-total">—</div>
-      <div class="stat-lbl">Total fédération</div>
-      <div class="stat-src">ACI + ML</div>
+      <div class="stat-lbl">Total adhérents</div>
+      <div class="stat-src">Secteur ACI</div>
     </div>
   </div>
 
@@ -1820,8 +1815,7 @@ function toggleTheme() {
 var FED_SECTORS = [
   {key:'aci', name:"Ateliers Chantiers d'Insertion", short:'ACI',  idcc:'IDCC 3016', color:'#E24B4A', emoji:'🏭', url:null, hashNav:'aci',      status:'live',    desc:"IAE · Insertion par l'activité économique · CDDI · 20 000 salariés",
    gs:{nb_total:2597, nb_ccn:2168, nb_elections:132, total_cgt:1121, total_votants:8779, total_insc:15137}},
-  {key:'ml',  name:'Missions Locales',               short:'ML',   idcc:'IDCC 1261', color:'#185fa5', emoji:'🎓', url:null, hashNav:'ml',   status:'live',    desc:'Accompagnement jeunes · 16-25 ans · Emploi · 13 000 salariés',
-   gs:{nb_total:451, nb_ccn:417, nb_elections:0, total_cgt:0, total_votants:0, total_insc:0}},
+  {key:'ml',  name:'Missions Locales',               short:'ML',   idcc:'IDCC 1261', color:'#185fa5', emoji:'🎓', url:null,            status:'soon',    desc:'Accompagnement jeunes · 16-25 ans · Emploi · 13 000 salariés'},
   {key:'ad',  name:'Aides à Domicile',               short:'AD',   idcc:'IDCC 2111', color:'#1D9E75', emoji:'🏡', url:null,            status:'soon',    desc:'SAAD · SSIAD · Services à la personne · Maintien à domicile'},
   {key:'rq',  name:'Régies de Quartier',             short:'RQ',   idcc:'IDCC 1790', color:'#f57c00', emoji:'🏘️', url:null,            status:'planned', desc:'Développement local · Cohésion sociale · CNLRQ'},
   {key:'mut', name:'Mutualité',                      short:'MUT',  idcc:'IDCC 2256', color:'#7b1fa2', emoji:'🏥', url:null,            status:'planned', desc:'Mutuelles · Protection complémentaire · FNMF'},
