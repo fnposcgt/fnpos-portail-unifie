@@ -491,6 +491,7 @@ td.td-adh{vertical-align:top;min-width:200px;width:240px;padding:4px 6px}
 
 .kpi { cursor: pointer; transition: all 0.2s; }
 .kpi:hover { background: var(--bg3) !important; transform: translateY(-1px); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+.ki { font-size: 20px; margin-bottom: 4px; }
 
 /* ── Lock screen ── */
 #lock-screen{position:fixed;inset:0;z-index:99999;background:#1a1a18;display:flex;align-items:center;justify-content:center}
@@ -7188,11 +7189,11 @@ function buildSecteurTab() {
       for (var k in edits) { if (edits[k] && edits[k].length) adhCount += edits[k].filter(function(a){return !a.arc;}).length; }
     } catch(e){}
     krow.innerHTML =
-      '<div class="kpi"><div class="kl">Structures</div><div class="kv">'+((GS.nb||0).toLocaleString('fr-FR'))+'</div><div class="ks">CCN ACI OUI : '+(GS.nb_ccn_oui||0)+'</div></div>'+
-      '<div class="kpi"><div class="kl">Avec élections</div><div class="kv">'+(GS.nb_elections||0)+'</div><div class="ks">données CSE nationales</div></div>'+
-      '<div class="kpi"><div class="kl">Inscrits</div><div class="kv">'+((GS.total_insc||0).toLocaleString('fr-FR'))+'</div><div class="ks">électeurs enregistrés</div></div>'+
-      '<div class="kpi"><div class="kl">Participation</div><div class="kv">'+ap+'%</div><div class="ks">'+((GS.total_votants||0).toLocaleString('fr-FR'))+' votants</div></div>'+
-      '<div class="kpi"><div class="kl">Adhérents CGT</div><div class="kv" style="color:#E24B4A">'+adhCount+'</div><div class="ks">enregistrés localement</div></div>';
+      '<div class="kpi" onclick="goTab(\'tableau\')" style="cursor:pointer" title="Voir le tableau des structures ACI"><div class="ki">🏢</div><div class="kl">Structures</div><div class="kv">'+((GS.nb||0).toLocaleString('fr-FR'))+'</div><div class="ks">Ateliers et Chantiers d\'Insertion</div></div>'+
+      '<div class="kpi" onclick="goTab(\'tableau\')" style="cursor:pointer" title="Voir les structures avec élections"><div class="ki">📊</div><div class="kl">Avec élections</div><div class="kv">'+(GS.nb_elections||0)+'</div><div class="ks">ont organisé des élections CSE</div></div>'+
+      '<div class="kpi" onclick="goTab(\'tableau\')" style="cursor:pointer" title="Voir les inscrits"><div class="ki">👥</div><div class="kl">Inscrits</div><div class="kv">'+((GS.total_insc||0).toLocaleString('fr-FR'))+'</div><div class="ks">salariés inscrits sur les listes</div></div>'+
+      '<div class="kpi" onclick="goTab(\'tableau\')" style="cursor:pointer" title="Voir la participation aux élections"><div class="ki">📈</div><div class="kl">Participation</div><div class="kv">'+ap+'%</div><div class="ks">'+((GS.total_votants||0).toLocaleString('fr-FR'))+' votants aux dernières élections</div></div>'+
+      '<div class="kpi" onclick="goTab(\'syndicats\')" style="cursor:pointer" title="Voir les adhérents CGT"><div class="ki">✊</div><div class="kl">Adhérents CGT</div><div class="kv" style="color:#E24B4A">'+adhCount+'</div><div class="ks">membres CGT recensés</div></div>';
   }
   /* Badge sync */
   var badge = document.getElementById('sec-sync-badge');
