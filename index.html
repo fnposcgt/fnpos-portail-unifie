@@ -4393,8 +4393,8 @@ function buildCiblage(){
   var _cibByMonth={};
   for(var i=0;i<data.length;i++){
     var _cpr=g(data[i].s,"pr");if(!_cpr)continue;
-    var _cpts=_cpr.split("/");if(_cpts.length!==3)continue;
-    var _cmk=_cpts[2]+"-"+("0"+_cpts[1]).slice(-2);
+    var _cpp=parsePr(_cpr);if(!_cpp)continue;
+    var _cmk=_cpp.y+"-"+("0"+(_cpp.m+1)).slice(-2);
     if(!_cibByMonth[_cmk])_cibByMonth[_cmk]=[];
     _cibByMonth[_cmk].push(data[i]);
   }
@@ -4420,15 +4420,15 @@ function buildCiblage(){
       var tv=d.total||1;
       var cgtPct=cgt>0?Math.round(cgt/tv*100):0;
       var urgHtml='<span class="urg-ok">\u2014</span>';
-      if(pr){var pts=pr.split("/");if(pts.length===3){
-        var ts3=new Date(parseInt(pts[2]),parseInt(pts[1])-1,parseInt(pts[0])).getTime()/1000;
+      if(pr){var _cppU=parsePr(pr);if(_cppU){
+        var ts3=new Date(_cppU.y,_cppU.m,_cppU.d).getTime()/1000;
         var days3=Math.round((ts3-now)/86400);
         urgHtml=days3<0?'<span style="display:inline-flex;background:#E24B4A;color:#fff;font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px">&#9888; Pass\u00e9e</span>':days3===0?'<span style="display:inline-flex;background:#E24B4A;color:#fff;font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px">&#9889; Aujourd\'hui</span>':days3<=30?'<span style="display:inline-flex;background:#E24B4A;color:#fff;font-size:13px;font-weight:900;padding:4px 11px;border-radius:20px;box-shadow:0 2px 6px rgba(226,75,74,.4)">'+days3+' j</span>':days3<=90?'<span style="display:inline-flex;background:#EF9F27;color:#fff;font-size:13px;font-weight:900;padding:4px 11px;border-radius:20px;box-shadow:0 2px 6px rgba(239,159,39,.4)">'+days3+' j</span>':'<span style="display:inline-flex;background:var(--bg3);color:var(--tx2);font-size:12px;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid var(--bd)">'+days3+' j</span>';
       }}
       var gan=g(s,"ga"),sReg=g(s,"r");
-      var prPts=pr?pr.split("/"):[];
-      var dayNum=prPts.length===3?parseInt(prPts[0]):0;
-      var dow=dayNum>0?_CDNAMES[new Date(parseInt(prPts[2]),parseInt(prPts[1])-1,dayNum).getDay()]:"";
+      var _cppD=parsePr(pr||"");
+      var dayNum=_cppD?_cppD.d:0;
+      var dow=(_cppD&&dayNum>0)?_CDNAMES[new Date(_cppD.y,_cppD.m,_cppD.d).getDay()]:"";
       var sitColor=d.situation==="sans"?"#E24B4A":d.situation==="min"?"#EF9F27":"#1D9E75";
       var sitLabel=d.situation==="sans"?"Sans CGT":d.situation==="min"?"CGT minoritaire":"CGT majoritaire";
       var addrHtml="";
