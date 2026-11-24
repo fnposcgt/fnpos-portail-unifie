@@ -3398,11 +3398,11 @@ function buildSecteur(){
   /* KPIs */
   var html =
   '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;">'+
-    _skpi(inf.emoji,'Structures',fmt(nb),inf.label)+
-    _skpi('📊','Avec élections',fmt(nbElec),'ont organisé des élections DP')+
-    _skpi('👥','Inscrits',fmt(insc),inf.kpiLabel)+
-    _skpi('📈','Participation',part+'%','aux dernières élections')+
-    _skpi('✊','Adhérents CGT',fmt(adh),'membres CGT recensés')+
+    _skpi(inf.emoji,'Structures',fmt(nb),inf.label,'tableau')+
+    _skpi('📊','Avec élections',fmt(nbElec),'ont organisé des élections DP','tableau')+
+    _skpi('👥','Inscrits',fmt(insc),inf.kpiLabel,'tableau')+
+    _skpi('📈','Participation',part+'%','aux dernières élections','tableau')+
+    _skpi('✊','Adhérents CGT',fmt(adh),'membres CGT recensés','adherents')+
   '</div>';
 
   /* Description */
@@ -3461,8 +3461,9 @@ function buildSecteur(){
   el.innerHTML = html;
 }
 
-function _skpi(icon,label,val,sub){
-  return '<div style="flex:1 1 130px;min-width:120px;background:var(--bg3,#263045);border-radius:10px;padding:12px 14px;text-align:center;">'+
+function _skpi(icon,label,val,sub,dest){
+  var click = dest ? 'onclick="goTab(\''+dest+'\')" onmouseover="this.style.opacity=\'.8\'" onmouseout="this.style.opacity=\'1\'" style="flex:1 1 130px;min-width:120px;background:var(--bg3,#263045);border-radius:10px;padding:12px 14px;text-align:center;cursor:pointer;transition:opacity .15s;"' : 'style="flex:1 1 130px;min-width:120px;background:var(--bg3,#263045);border-radius:10px;padding:12px 14px;text-align:center;"';
+  return '<div '+click+'>'+
     '<div style="font-size:1.5em;margin-bottom:4px;">'+icon+'</div>'+
     '<div style="font-size:.78em;color:var(--tx2);margin-bottom:4px;">'+label+'</div>'+
     '<div style="font-size:1.35em;font-weight:700;color:var(--tx1);">'+val+'</div>'+
