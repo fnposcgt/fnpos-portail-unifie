@@ -915,6 +915,8 @@ function authSuccess() {
     if(typeof syncStart === 'function') syncStart();
     setTimeout(function(){
       if(typeof drawMap === 'function') drawMap();
+      /* invalidateSize après que le conteneur soit rendu visible */
+      setTimeout(function(){ if(typeof _lfMap!=='undefined'&&_lfMap) _lfMap.invalidateSize(); }, 300);
       var savedTab = '';
       try{ savedTab = localStorage.getItem('fnpos_tab_'+SEC) || ''; }catch(e){}
       if(savedTab && typeof goTab === 'function') goTab(savedTab);
@@ -1906,6 +1908,7 @@ function activateSector(def) {
   /* Draw map (needs a small delay for DOM to be visible) */
   setTimeout(function() {
     if (typeof drawMap === 'function') drawMap();
+    setTimeout(function(){ if(typeof _lfMap!=='undefined'&&_lfMap) _lfMap.invalidateSize(); }, 300);
     /* Restore saved tab */
     var savedTab = '';
     try { savedTab = localStorage.getItem('fnpos_tab_' + SEC) || ''; } catch(e) {}
@@ -3262,7 +3265,7 @@ function goTab(name){
   if(name==="adherents")window.setTimeout(buildAdherents,80);
   if(name==="conquete")window.setTimeout(renderConquete,80);
   if(name==="outils")window.setTimeout(renderBiblioTab,80);
-  if(name==="carte")window.setTimeout(drawMap,80);
+  if(name==="carte")window.setTimeout(function(){ drawMap(); if(_lfMap) _lfMap.invalidateSize(); },150);
   try{localStorage.setItem('fnpos_tab_'+SEC,name);}catch(e){}
 }
 var cqPage=0, cqPageSize=25;
