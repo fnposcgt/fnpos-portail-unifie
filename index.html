@@ -1921,10 +1921,18 @@ function activateSector(def) {
   /* Après restauration des filtres, s'assurer que fpar ne vide pas le tableau :
      si la participation sauvegardée est restrictive mais qu'aucun résultat n'est probable,
      on force à "Tous". On rebuilde toujours une seconde fois après 500ms (belt+suspenders). */
+  /* Réinitialiser les filtres potentiellement bloquants */
   try{var _fparEl=document.getElementById('fpar');if(_fparEl&&_fparEl.value!=='0'&&_fparEl.value!==''){_fparEl.value='0';}}catch(e){}
-  if (typeof buildTable === 'function')  buildTable();
-  setTimeout(function(){ if(typeof fillSelects==='function')fillSelects(); if(typeof buildTable==='function')buildTable(); }, 500);
-  if (typeof buildCal === 'function')    buildCal();
+  /* Reset tf-cq (conquête) : un filtre sauvegardé sur un statut vide → zéro résultat */
+  try{var _tfCqEl=document.getElementById('tf-cq');if(_tfCqEl&&_tfCqEl.value!==''){_tfCqEl.value='';}}catch(e){}
+  /* Reset tf-adh : un filtre adhérent sauvegardé peut exclure tout si données absentes */
+  try{var _tfAdhEl=document.getElementById('tf-adh');if(_tfAdhEl&&_tfAdhEl.value!==''){_tfAdhEl.value='';}}catch(e){}
+  try { if (typeof buildTable === 'function') buildTable(); } catch(e) { console.error('[activateSector] buildTable:', e); }
+  setTimeout(function(){
+    try{ if(typeof fillSelects==='function')fillSelects(); }catch(e){}
+    try{ if(typeof buildTable==='function')buildTable(); }catch(e){}
+  }, 500);
+  try { if (typeof buildCal === 'function') buildCal(); } catch(e) { console.error('[activateSector] buildCal:', e); }
   if (typeof buildExpPreview === 'function') buildExpPreview();
   if (typeof buildAlerts === 'function') buildAlerts();
   if (typeof ejsLoadConfig === 'function') ejsLoadConfig();
@@ -4952,6 +4960,10 @@ function getFiltered(){
 function buildTable(keepPage){
   if(!keepPage) tPage=0;
   var data=getFiltered();
+  /* Diagnostic : si STRUCTS vide ou zéro résultat inattendu */
+  if(data.length===0 && (typeof STRUCTS==='undefined'||!STRUCTS||!STRUCTS.length)){
+    console.error('[buildTable] STRUCTS vide ou non défini ! SEC='+SEC+' STRUCTS='+typeof STRUCTS);
+  }
   data.sort(function(a,b){
     var va=a[sortCol]||"",vb=b[sortCol]||"";
     if(typeof va==="number"||!isNaN(parseFloat(va)))return(parseFloat(va)-parseFloat(vb))*sortDir;
