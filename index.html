@@ -3381,6 +3381,8 @@ var _SECTEUR_INFO = {
 function buildSecteur(){
   var el=document.getElementById('secteur-content');
   if(!el) return;
+  /* Appliquer les EDITS avant de recalculer GS pour avoir les voix à jour */
+  if(typeof applyEdits==='function') try{applyEdits();}catch(e){}
   if(typeof buildGS==='function') buildGS();
   var gs  = GS||{};
   var sec = (typeof SEC!=='undefined'&&SEC) ? SEC : 'aci';
