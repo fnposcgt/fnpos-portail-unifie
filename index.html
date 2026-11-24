@@ -7129,6 +7129,37 @@ window.addEventListener('hashchange', function() {
       h += '</div></div>';
     }
 
+    /* Responsables CGT de région */
+    if(s.r && typeof CONTACTS_BY_REGION !== 'undefined' && CONTACTS_BY_REGION[s.r]){
+      var rCont = CONTACTS_BY_REGION[s.r];
+      var rRefts = rCont.referents || [];
+      var rResps = rCont.responsables || [];
+      var rMembs = rCont.membres_cef || [];
+      var allReg = rRefts.length+rResps.length+rMembs.length;
+      if(allReg > 0){
+        h += '<div style="padding:14px 20px 0">';
+        h += '<div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Responsables CGT — '+s.r+'</div>';
+        h += '<div style="background:rgba(24,95,165,.06);border-left:3px solid #185fa5;border-radius:0 8px 8px 0;padding:8px 12px">';
+        var allPeople = [];
+        if(rRefts.length){ allPeople.push({label:'Référent·e',list:rRefts}); }
+        if(rResps.length){ allPeople.push({label:'Responsable',list:rResps}); }
+        for(var rgi=0;rgi<allPeople.length;rgi++){
+          var grp=allPeople[rgi];
+          for(var rpi=0;rpi<grp.list.length;rpi++){
+            var rp=grp.list[rpi];
+            if(!rp.nom)continue;
+            h += '<div style="font-size:11px;padding:4px 0;border-bottom:1px solid rgba(24,95,165,.1);display:flex;align-items:center;gap:8px;flex-wrap:wrap">';
+            h += '<span style="font-weight:600;color:var(--tx)">'+rp.nom+'</span>';
+            h += '<span style="font-size:9px;color:var(--tx3);background:var(--bg2);padding:1px 6px;border-radius:8px">'+grp.label+'</span>';
+            if(rp.tel) h += '<a href="tel:'+rp.tel+'" style="font-size:10px;color:#185fa5;text-decoration:none">📞 '+rp.tel+'</a>';
+            if(rp.email) h += '<a href="mailto:'+rp.email+'" style="font-size:10px;color:#185fa5;text-decoration:none">✉ '+rp.email+'</a>';
+            h += '</div>';
+          }
+        }
+        h += '</div></div>';
+      }
+    }
+
     /* Carte mini si lat/lon */
     if(s.la && s.lo){
       h += '<div style="padding:14px 20px 0">';
