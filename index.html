@@ -762,6 +762,7 @@ main{max-width:1100px;margin:0 auto;padding:28px 20px 60px}
     <div class="g-sync-row" id="g-sync-row" style="display:none">
       <div class="sync-dot" id="sync-dot"></div>
       <span class="sync-label" id="sync-label">—</span>
+      <button class="sync-hdr-btn" id="sync-btn" onclick="if(typeof syncPull==='function'){syncPull(function(){if(typeof syncPush==='function')syncPush();});}" title="Forcer la synchronisation">↻</button>
     </div>
     <button id="g-theme-btn" onclick="toggleTheme()" title="Thème clair/sombre">🌙</button>
   </div>
