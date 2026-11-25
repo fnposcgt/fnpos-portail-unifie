@@ -6243,8 +6243,8 @@ function _mergeEdits(local, remote) {
   if (!remote) return local;
   if (!local)  return remote;
   var out = { structs:{}, contacts:{}, adherents:{}, new_structs:[], notes:{} };
-  /* structs, contacts, adherents, notes : objets {siret: {champ:val}} */
-  var objKeys = ['structs','contacts','adherents','notes'];
+  /* structs, contacts, notes : objets {siret: val} — le local gagne */
+  var objKeys = ['structs','contacts','notes'];
   for (var oi=0; oi<objKeys.length; oi++) {
     var k = objKeys[oi];
     var loc = local[k]  || {};
@@ -6258,6 +6258,19 @@ function _mergeEdits(local, remote) {
       if (loc[k] !== undefined) { /* always true */ }
       out[k][keys[i]] = loc[keys[i]]; /* local wins */
     }
+  }
+  /* adherents : union des tableaux par siret — dédupliqué par nom+prénom, local gagne sur conflit */
+  var locAdh = local['adherents'] || {};
+  var remAdh = remote['adherents'] || {};
+  var allAdSirets = {};
+  var ak; for (ak in locAdh) allAdSirets[ak]=1; for (ak in remAdh) allAdSirets[ak]=1;
+  out['adherents'] = {};
+  for (ak in allAdSirets) {
+    var la = locAdh[ak] || []; var ra = remAdh[ak] || [];
+    var seen = {}; var merged = [];
+    for (var pi=0; pi<la.length; pi++) { var p=la[pi]; var pk=(p.nom||'')+'|'+(p.pre||''); seen[pk]=1; merged.push(p); }
+    for (var pi=0; pi<ra.length; pi++) { var p=ra[pi]; var pk=(p.nom||'')+'|'+(p.pre||''); if(!seen[pk]){ seen[pk]=1; merged.push(p); } }
+    out['adherents'][ak] = merged;
   }
   /* new_structs : concat dédupliqué par si */
   var remNS = (remote.new_structs || []);
