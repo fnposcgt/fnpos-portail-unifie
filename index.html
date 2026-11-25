@@ -1654,6 +1654,7 @@ var RS        = {};
 var ADHERENTS = {};
 var EDIT_KEY  = '';
 var GS_URL    = '';   /* défini par SEC_DEFS lors du goView(secteur) */
+var GS_NOTES  = {};   /* siret → [notes] — chargé par editsLoad() */
 var EDITS     = { structs:{}, contacts:{}, adherents:{}, new_structs:[], notes:{} };
 var FILTER_KEY    = '';
 var CONQUETE_KEY  = '';
@@ -6205,11 +6206,12 @@ function syncPush(onDone) {
   var _cqKey   = SEC_CFG.cqKey;
   var _blKey   = SEC_CFG.blKey;
   var body = JSON.stringify({
-    id:       1,
-    edits:    _lsGet(_edKey),
-    conquete: _lsGet(_cqKey),
-    biblio:   _lsGet(_blKey),
-    updated_at: new Date().toISOString()
+    id:          1,
+    write_token: 'fnpos-cgt-sync-2025',
+    edits:       _lsGet(_edKey),
+    conquete:    _lsGet(_cqKey),
+    biblio:      _lsGet(_blKey),
+    updated_at:  new Date().toISOString()
   });
   var xhr = new XMLHttpRequest();
   xhr.open('POST', SUPABASE_URL + '/rest/v1/' + _syncTbl, true);
@@ -6800,6 +6802,10 @@ function lockUnlockApp() {
     }
   } catch(e) {}
 })();
+
+/* Stubs biométrie — WebAuthn désactivé (non supporté sur tous les appareils) */
+function biometricUnlock()   { /* no-op — déverrouillage auto via aci_lock_pwd si dispo */ }
+function biometricRegister() { /* no-op */ }
 
 function checkLockPwd() {
   var inp      = document.getElementById('lock-inp');
