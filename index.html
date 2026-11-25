@@ -4613,6 +4613,22 @@ function hideTip(){tipEl.style.display="none";}
 /* === CARTE LEAFLET === */
 var _lfMap=null,_lfRegLayer=null,_lfDeptLayer=null,_lfAdhLayer=null;
 var _regGeoData=null,_deptGeoData=null,_lfLabels=[];
+/* DEPT_PATHS : {code_dept → {region}} — reconstruit depuis STRUCTS (même logique que getDeptDk) */
+var DEPT_PATHS={};
+function _buildDeptPaths(){
+  DEPT_PATHS={};
+  for(var i=0;i<STRUCTS.length;i++){
+    var s=STRUCTS[i];
+    var cp=String(s.cp||"").replace(/[^0-9]/g,"").padStart(5,"0");
+    var cp2=cp.substring(0,2);
+    var cp3=cp.substring(0,3);
+    var d;
+    if(cp3==="200"||cp3==="201") d="2A";
+    else if(cp3==="202"||cp3==="203"||cp3==="204"||cp3==="205"||cp3==="206") d="2B";
+    else d=cp2;
+    if(d&&!DEPT_PATHS[d]) DEPT_PATHS[d]={region:s.r||""};
+  }
+}
 var INSEE_REG_MAP={
   "84":"AUVERGNE RHONE ALPES","27":"BOURGOGNE FRANCHE COMTE","53":"BRETAGNE",
   "24":"CENTRE VAL DE LOIRE","94":"CORSE","44":"GRAND EST","32":"HAUTS DE FRANCE",
@@ -4816,6 +4832,7 @@ function getRegAdhInfo(rsKey){
 }
 function _renderDeptLayer(gj){
   if(!_lfMap||!gj)return;
+  if(!Object.keys(DEPT_PATHS).length) _buildDeptPaths();
   var maxC=0,dcodes=Object.keys(DEPT_PATHS);
   for(var i=0;i<dcodes.length;i++){var dk0=getDeptDk(dcodes[i]);if(dk0&&dk0.count>maxC)maxC=dk0.count;}
   if(!maxC)maxC=1;
