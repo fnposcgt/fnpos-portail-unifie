@@ -6361,56 +6361,85 @@ function _sbHeaders() {
 
 function syncPush(onDone) {
   if(_syncBusy) { if(onDone) onDone(); return; }
-  /* Mettre à jour le KPI adhérents avant sync */
-  if(typeof getAdhCount==='function') EDITS.kpi_adh=getAdhCount();
   _syncBusy = true;
   updateSyncStatus('syncing');
   var _syncTbl = SEC_CFG.syncTbl;
   var _edKey   = SEC_CFG.editKey;
   var _cqKey   = SEC_CFG.cqKey;
   var _blKey   = SEC_CFG.blKey;
-  /* Payload edits = secteur EDITS + ul_data/ud_data de UDUL_EDITS (sans toucher localStorage) */
-  var _rawEdits = _lsGet(_edKey) || {};
+  /* ── Pull-Merge-Push : on tire d'abord le distant pour fusionner avant d'écrire ── */
+  var xhrGet = new XMLHttpRequest();
+  xhrGet.open('GET', SUPABASE_URL+'/rest/v1/'+_syncTbl+'?id=eq.1&select=edits', true);
+  var _hg = _sbHeaders();
+  xhrGet.setRequestHeader('apikey',        _hg['apikey']);
+  xhrGet.setRequestHeader('Authorization', _hg['Authorization']);
+  xhrGet.timeout = 8000;
+  xhrGet.onload = function(){
+    var _local = _lsGet(_edKey) || {};
+    if(xhrGet.status >= 200 && xhrGet.status < 300){
+      try{
+        var _rem = JSON.parse(xhrGet.responseText);
+        if(_rem && _rem[0] && _rem[0].edits){
+          /* Fusion : local gagne sur conflit, mais on ne perd jamais les adhérents distants */
+          var _merged = _mergeEdits(_local, _rem[0].edits);
+          _lsSet(_edKey, _merged);
+          _local = _merged;
+          if(typeof editsLoad==='function') editsLoad(); /* rafraîchit l'affichage si nécessaire */
+        }
+      }catch(e){ console.log('[Sync] pull avant push:',e); }
+    }
+    _syncDoPush(_local, _syncTbl, _edKey, _cqKey, _blKey, onDone);
+  };
+  xhrGet.onerror = xhrGet.ontimeout = function(){
+    /* En cas d'échec du pull, on pousse quand même le local */
+    _syncDoPush(_lsGet(_edKey)||{}, _syncTbl, _edKey, _cqKey, _blKey, onDone);
+  };
+  xhrGet.send();
+}
+function _syncDoPush(_edits, _syncTbl, _edKey, _cqKey, _blKey, onDone){
+  /* Mettre à jour le KPI adhérents */
+  if(typeof getAdhCount==='function') _edits = JSON.parse(JSON.stringify(_edits)), _edits.kpi_adh = getAdhCount();
+  /* Injecter ul_data/ud_data depuis UDUL_EDITS (sans toucher localStorage) */
   try{
     if(typeof UDUL_EDITS!=='undefined'){
       var _hasUL = UDUL_EDITS.ul_data && Object.keys(UDUL_EDITS.ul_data).length;
       var _hasUD = UDUL_EDITS.ud_data && Object.keys(UDUL_EDITS.ud_data).length;
       if(_hasUL || _hasUD){
-        _rawEdits = JSON.parse(JSON.stringify(_rawEdits)); /* copie pour ne pas modifier localStorage */
-        if(_hasUL) _rawEdits.ul_data = UDUL_EDITS.ul_data;
-        if(_hasUD) _rawEdits.ud_data = UDUL_EDITS.ud_data;
+        if(!(_edits && _edits.kpi_adh!==undefined)) _edits=JSON.parse(JSON.stringify(_edits||{}));
+        if(_hasUL) _edits.ul_data = UDUL_EDITS.ul_data;
+        if(_hasUD) _edits.ud_data = UDUL_EDITS.ud_data;
       }
     }
   }catch(e){ console.log('[Sync] injection UDUL:',e); }
   var body = JSON.stringify({
     id:          1,
     write_token: 'fnpos-cgt-sync-2025',
-    edits:       _rawEdits,
+    edits:       _edits,
     conquete:    _lsGet(_cqKey),
     biblio:      _lsGet(_blKey),
     updated_at:  new Date().toISOString()
   });
   var xhr = new XMLHttpRequest();
-  xhr.open('POST', SUPABASE_URL + '/rest/v1/' + _syncTbl, true);
+  xhr.open('POST', SUPABASE_URL+'/rest/v1/'+_syncTbl, true);
   var hdrs = _sbHeaders();
   xhr.setRequestHeader('apikey',        hdrs['apikey']);
   xhr.setRequestHeader('Authorization', hdrs['Authorization']);
   xhr.setRequestHeader('Content-Type',  hdrs['Content-Type']);
   xhr.setRequestHeader('Prefer',        hdrs['Prefer']);
   xhr.timeout = 10000;
-  xhr.onload = function() {
+  xhr.onload = function(){
     _syncBusy = false;
-    if(xhr.status >= 200 && xhr.status < 300) {
-      console.log('[Sync] Push OK ' + new Date().toLocaleTimeString());
+    if(xhr.status >= 200 && xhr.status < 300){
+      console.log('[Sync] Push OK '+new Date().toLocaleTimeString());
       updateSyncStatus('ok');
     } else {
-      console.log('[Sync] Push erreur HTTP ' + xhr.status + ' ' + xhr.responseText);
+      console.log('[Sync] Push erreur HTTP '+xhr.status+' '+xhr.responseText);
       updateSyncStatus('error');
     }
     if(onDone) onDone();
   };
-  xhr.onerror   = function() { _syncBusy = false; updateSyncStatus('offline'); if(onDone) onDone(); };
-  xhr.ontimeout = function() { _syncBusy = false; updateSyncStatus('offline'); if(onDone) onDone(); };
+  xhr.onerror   = function(){ _syncBusy=false; updateSyncStatus('offline'); if(onDone) onDone(); };
+  xhr.ontimeout = function(){ _syncBusy=false; updateSyncStatus('offline'); if(onDone) onDone(); };
   xhr.send(body);
 }
 
