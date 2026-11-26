@@ -2293,11 +2293,12 @@ function updateSectorStats(sector, row) {
   var totalStr = 0;
   if (row.edits) {
     var edits = row.edits;
-    /* Adhérents: toujours compter depuis edits.adherents (source de vérité Supabase)
-       — on ignore kpi_adh qui peut être périmé suite à un push depuis un appareil avec moins d'adhérents */
-    if (edits.adherents && typeof edits.adherents === 'object') {
+    /* Adhérents: kpi_adh en priorité — il reflète getAdhCount() côté appli (inclut XLSX)
+       Fallback: comptage depuis edits.adherents si kpi_adh absent */
+    if (typeof edits.kpi_adh === 'number' && edits.kpi_adh > 0) {
+      totalAdh = edits.kpi_adh;
+    } else if (edits.adherents && typeof edits.adherents === 'object') {
       var adhs = edits.adherents;
-      /* Dédupliquer par nom+prénom pour éviter doublons entre syndicats */
       var seen = {};
       var skeys = Object.keys(adhs);
       for (var i = 0; i < skeys.length; i++) {
@@ -2312,9 +2313,6 @@ function updateSectorStats(sector, row) {
           }
         }
       }
-    } else if (typeof edits.kpi_adh === 'number') {
-      /* Fallback si adherents absent (ancien format) */
-      totalAdh = edits.kpi_adh;
     }
     /* Structures suivies */
     if (edits.structs && typeof edits.structs === 'object') {
@@ -6394,8 +6392,13 @@ function syncPush(onDone) {
   xhrGet.send();
 }
 function _syncDoPush(_edits, _syncTbl, _edKey, _cqKey, _blKey, onDone){
-  /* Mettre à jour le KPI adhérents */
-  if(typeof getAdhCount==='function') _edits = JSON.parse(JSON.stringify(_edits)), _edits.kpi_adh = getAdhCount();
+  /* Mettre à jour le KPI adhérents — ne jamais diminuer (kpi peut inclure adhérents XLSX non dans edits.adherents) */
+  if(typeof getAdhCount==='function'){
+    _edits = JSON.parse(JSON.stringify(_edits));
+    var _newKpi = getAdhCount();
+    var _prevKpi = typeof _edits.kpi_adh === 'number' ? _edits.kpi_adh : 0;
+    _edits.kpi_adh = Math.max(_newKpi, _prevKpi);
+  }
   /* Injecter ul_data/ud_data depuis UDUL_EDITS (sans toucher localStorage) */
   try{
     if(typeof UDUL_EDITS!=='undefined'){
