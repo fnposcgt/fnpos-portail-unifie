@@ -2306,7 +2306,7 @@ function updateSectorStats(sector, row) {
           for (var j = 0; j < arr.length; j++) {
             var a = arr[j];
             if (!a._deleted && a.arc !== 'OUI') {
-              var key = (a.nom||'')+'|'+(a.prenom||'');
+              var key = (a.nom||'')+'|'+(a.pre||'');
               if (!seen[key]) { seen[key] = true; totalAdh++; }
             }
           }
