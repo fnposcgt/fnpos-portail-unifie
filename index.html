@@ -3358,12 +3358,20 @@ function renderUDBlock(cp){
   var ud=UD_MAP[getUDCode(cp)]||null;
   var ulCodes=CP_UL_MAP[cp5]||[];
   if(!ud&&!ulCodes.length)return "";
+  /* BCC/reply-to expéditeur si secteur ACI */
+  var sender=(typeof ejsGetSender==='function')?ejsGetSender():'';
+  function mkMailto(addr,nom){
+    var subj=encodeURIComponent('[FNPOS-CGT] Contact — '+nom);
+    var p='subject='+subj;
+    if(sender)p+='&bcc='+encodeURIComponent(sender)+'&reply-to='+encodeURIComponent(sender);
+    return 'mailto:'+addr+'?'+p;
+  }
   var h='<div class="ud-block">';
   if(ud){
     h+='<div class="ud-block-title">&#127970; '+ud.n+'</div>';
     var meta=[];
     if(ud.t&&ud.t!=="00 00 00 00 00")meta.push('<a href="tel:'+ud.t.replace(/\s/g,"")+ '" class="ud-link">&#128222; '+ud.t+'</a>');
-    if(ud.e)meta.push('<a href="mailto:'+ud.e+'" class="ud-link">&#9993; '+ud.e+'</a>');
+    if(ud.e)meta.push('<a href="'+mkMailto(ud.e,ud.n)+'" class="ud-link">&#9993; '+ud.e+'</a>');
     if(meta.length)h+='<div class="ud-block-meta">'+meta.join(' &nbsp; ')+'</div>';
   }
   if(ulCodes.length>0){
@@ -3376,7 +3384,7 @@ function renderUDBlock(cp){
       h+='<span class="ud-ul-nom">'+(ul.n||"")+'</span>';
       if(ul.v)h+='<span class="ud-ul-ville">'+ul.v+'</span>';
       if(ul.t&&ul.t!=="00 00 00 00 00")h+='<a href="tel:'+ul.t.replace(/\s/g,"")+ '" class="ud-link" style="font-size:9px">'+ul.t+'</a>';
-      if(ul.e)h+='<a href="mailto:'+ul.e+'" class="ud-link" style="font-size:9px">'+ul.e+'</a>';
+      if(ul.e)h+='<a href="'+mkMailto(ul.e,ul.n||'UL CGT')+'" class="ud-link" style="font-size:9px">'+ul.e+'</a>';
       h+='</div>';
     }
     h+='</div>';
