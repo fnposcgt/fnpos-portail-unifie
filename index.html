@@ -372,6 +372,10 @@ body.readonly #tp-adherents{display:none!important}
 body.readonly #tab-btn-emailing{display:none!important}
 body.readonly #tp-emailing{display:none!important}
 body.readonly .doc-viewer-btn{display:none!important}
+/* Watermark RO — fixé, visible sur toute capture d'écran */
+body.readonly::after{content:'LECTURE SEULE — CONFIDENTIEL';position:fixed;bottom:12px;right:12px;font-size:11px;font-weight:700;color:rgba(226,75,74,0.55);letter-spacing:1px;pointer-events:none;z-index:99999;user-select:none}
+/* Blocage impression en mode RO */
+@media print{body.readonly{display:none!important}}
 #edit-toast{display:none;position:fixed;bottom:60px;left:50%;transform:translateX(-50%);padding:8px 18px;border-radius:20px;color:#fff;font-size:12px;font-weight:600;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.25)}
 
 
@@ -848,7 +852,10 @@ function checkAuth() {
 
   /* Le mot de passe master et le RO global ouvrent tous les accès */
   if (val === MASTER_PWD) { authSuccess(); return; }
-  if (val === READONLY_PWD) { IS_READONLY = true; authSuccess(); return; }
+  if (val === READONLY_PWD) { IS_READONLY = true; authSuccess();
+    /* Bloquer impression/PDF en mode RO */
+    window.print = function(){ return false; };
+    return; }
 
   if (!val) {
     errEl.textContent = 'Veuillez saisir le mot de passe.';
