@@ -8062,7 +8062,10 @@ window.addEventListener('hashchange', function() {
     if(s.fi){ corps.push(''); corps.push('Fiche Inclusion : '+s.fi); }
     corps.push('');
     corps.push('-- Portail FNPOS-CGT · Secteur ACI');
-    var mailto = 'mailto:?subject='+sujet+'&body='+encodeURIComponent(corps.filter(function(l){return l!==undefined&&l!==null;}).join('\n'));
+    var mailParams = 'subject='+sujet+'&body='+encodeURIComponent(corps.filter(function(l){return l!==undefined&&l!==null;}).join('\n'));
+    var sender = ejsGetSender();
+    if(sender) mailParams += '&bcc='+encodeURIComponent(sender)+'&reply-to='+encodeURIComponent(sender);
+    var mailto = 'mailto:?' + mailParams;
     window.location.href = mailto;
   };
 
