@@ -6630,6 +6630,8 @@ function syncPull(onDone) {
           if(typeof buildBiblioList==='function') buildBiblioList();
           if(typeof biblioMigrate==='function') biblioMigrate();
           console.log('[Sync] Pull+merge OK — ' + (row.updated_at || ''));
+          /* Remonter le résultat mergé vers Supabase (le local peut avoir plus que le remote) */
+          setTimeout(function(){ syncPush(); }, 500);
         } else {
           console.log('[Sync] Aucune donnée distante, premier push...');
           syncPush(onDone);
