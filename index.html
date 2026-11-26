@@ -6429,16 +6429,48 @@ function _syncDoPush(_edits, _syncTbl, _edKey, _cqKey, _blKey, onDone){
     if(xhr.status >= 200 && xhr.status < 300){
       console.log('[Sync] Push OK '+new Date().toLocaleTimeString());
       updateSyncStatus('ok');
+      /* Push réussi : effacer le flag de push en attente */
+      try{ localStorage.removeItem('_fnpos_sync_pending'); }catch(e){}
     } else {
       console.log('[Sync] Push erreur HTTP '+xhr.status+' '+xhr.responseText);
       updateSyncStatus('error');
+      /* Push échoué : marquer pour relance dès retour réseau */
+      try{ localStorage.setItem('_fnpos_sync_pending','1'); }catch(e){}
     }
     if(onDone) onDone();
   };
-  xhr.onerror   = function(){ _syncBusy=false; updateSyncStatus('offline'); if(onDone) onDone(); };
-  xhr.ontimeout = function(){ _syncBusy=false; updateSyncStatus('offline'); if(onDone) onDone(); };
+  xhr.onerror   = function(){
+    _syncBusy=false; updateSyncStatus('offline');
+    try{ localStorage.setItem('_fnpos_sync_pending','1'); }catch(e){}
+    if(onDone) onDone();
+  };
+  xhr.ontimeout = function(){
+    _syncBusy=false; updateSyncStatus('offline');
+    try{ localStorage.setItem('_fnpos_sync_pending','1'); }catch(e){}
+    if(onDone) onDone();
+  };
   xhr.send(body);
 }
+
+/* ── Relance automatique dès retour réseau ── */
+(function(){
+  function _retryPendingPush(){
+    try{
+      if(!localStorage.getItem('_fnpos_sync_pending')) return;
+      if(typeof syncPush!=='function') return;
+      if(typeof SEC_CFG==='undefined' || !SEC_CFG || !SEC_CFG.syncTbl) return;
+      console.log('[Sync] Retour réseau — relance push en attente');
+      syncPush();
+    }catch(e){}
+  }
+  window.addEventListener('online', _retryPendingPush);
+  /* Relance aussi à chaque syncPull réussi (on est en ligne, profiter pour vider la file) */
+  var _origSyncPull = typeof syncPull === 'function' ? syncPull : null;
+  /* Patch appliqué après chargement complet via DOMContentLoaded */
+  document.addEventListener('DOMContentLoaded', function(){
+    setTimeout(function(){ _retryPendingPush(); }, 3000);
+  });
+})();
 
 /* ── Merge helpers ── */
 function _mergeEdits(local, remote) {
