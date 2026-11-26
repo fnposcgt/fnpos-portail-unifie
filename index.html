@@ -1853,6 +1853,13 @@ function initUDMaps() {
         if (!cm[cp5]) cm[cp5] = [];
         if (cm[cp5].indexOf(ul.code) === -1) cm[cp5].push(ul.code);
       }
+      /* Peuple UL_INDEX pour renderUDBlock */
+      UL_INDEX[String(ul.code)] = {
+        n: ul.nom   || '',
+        v: ul.ville || '',
+        t: ul.tel   || '',
+        e: ul.email || ''
+      };
     }
   }
   UD_MAP = m; CP_UL_MAP = cm; REGION_UD_MAP = rm;
