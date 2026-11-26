@@ -1663,6 +1663,9 @@ var EDIT_KEY  = '';
 var GS_URL    = '';   /* défini par SEC_DEFS lors du goView(secteur) */
 var GS_NOTES  = {};   /* siret → [notes] — chargé par editsLoad() */
 var EDITS     = { structs:{}, contacts:{}, adherents:{}, new_structs:[], notes:{} };
+/* Clé commune à tous les secteurs pour les données UD/UL (entités nationales partagées) */
+var UDUL_EDIT_KEY = 'fnpos_udul_edits';
+var UDUL_EDITS    = {ud_data:{}, ul_data:{}};
 var FILTER_KEY    = '';
 var CONQUETE_KEY  = '';
 
@@ -2385,12 +2388,56 @@ function editsLoad(){
     if(raw) EDITS = JSON.parse(raw);
   } catch(e){ EDITS = {structs:{},contacts:{},adherents:{},new_structs:[]}; }
   editsApply();
+  udulEditsLoad();
   buildGS();
   initUDMaps();
 }
 function editsSave(){
   try{ localStorage.setItem(EDIT_KEY, JSON.stringify(EDITS)); }
   catch(e){ showEditToast("\u26a0 Impossible de sauvegarder (stockage plein ?)", "#E24B4A"); }
+}
+/* \u2500\u2500 UD/UL EDITS PARTAG\u00c9S (tous secteurs) \u2500\u2500 */
+function udulEditsApply(){
+  if(UDUL_EDITS.ud_data){
+    for(var _udC in UDUL_EDITS.ud_data){
+      var _udP=UDUL_EDITS.ud_data[_udC];
+      for(var _ui=0;_ui<UD_DATA.length;_ui++){
+        if(UD_DATA[_ui].code==parseInt(_udC)){
+          var _f=['nom','adr','cp','ville','tel','email','site'];
+          for(var _fi=0;_fi<_f.length;_fi++){if(_udP[_f[_fi]]!==undefined)UD_DATA[_ui][_f[_fi]]=_udP[_f[_fi]];}
+          break;
+        }
+      }
+    }
+  }
+  if(UDUL_EDITS.ul_data){
+    for(var _udC2 in UDUL_EDITS.ul_data){
+      var _ulPs=UDUL_EDITS.ul_data[_udC2];
+      for(var _ui2=0;_ui2<UD_DATA.length;_ui2++){
+        if(UD_DATA[_ui2].code==parseInt(_udC2)){
+          if(!UD_DATA[_ui2].uls)UD_DATA[_ui2].uls=[];
+          for(var _ulI in _ulPs){
+            var _ulP=_ulPs[_ulI];
+            if(!UD_DATA[_ui2].uls[_ulI])UD_DATA[_ui2].uls[_ulI]={};
+            var _ulf=['nom','cp','ville','tel','email'];
+            for(var _ufi=0;_ufi<_ulf.length;_ufi++){if(_ulP[_ulf[_ufi]]!==undefined)UD_DATA[_ui2].uls[_ulI][_ulf[_ufi]]=_ulP[_ulf[_ufi]];}
+          }
+          break;
+        }
+      }
+    }
+  }
+}
+function udulEditsLoad(){
+  try{
+    var _raw=localStorage.getItem(UDUL_EDIT_KEY);
+    if(_raw) UDUL_EDITS=JSON.parse(_raw);
+  }catch(e){ UDUL_EDITS={ud_data:{},ul_data:{}}; }
+  udulEditsApply();
+}
+function udulEditsSave(){
+  try{ localStorage.setItem(UDUL_EDIT_KEY, JSON.stringify(UDUL_EDITS)); }
+  catch(e){ showEditToast("\u26a0 Impossible de sauvegarder UD/UL", "#E24B4A"); }
 }
 var FILTER_IDS=['fsearch','freg','fccn','fsyn','fpar','tf-n','tf-r','tf-cp','tf-v','tf-si','tf-cc','tf-in-min','tf-in-max','tf-pa-min','tf-pa-max','tf-ga','tf-de','tf-pr','tf-tl','tf-adh','tf-cq','cq-search','cq-reg-filter','cq-aci-filter','cq-st-filter'];
 function filtersSave(){
@@ -3214,11 +3261,11 @@ function editUDSave(){
     m[rg].push({code:ud.code,nom:ud.nom,tel:ud.tel||"",email:ud.email||"",ville:ud.ville||"",uls:ud.uls||[]});
   }
   REGION_UD_MAP=m;
-  if(!EDITS.ud_data)EDITS.ud_data={};
+  if(!UDUL_EDITS.ud_data)UDUL_EDITS.ud_data={};
   for(var _i=0;_i<UD_DATA.length;_i++){
-    if(UD_DATA[_i].code==code){EDITS.ud_data[code]=UD_DATA[_i];break;}
+    if(UD_DATA[_i].code==code){UDUL_EDITS.ud_data[code]=UD_DATA[_i];break;}
   }
-  editsSave();
+  udulEditsSave();
   document.getElementById("edit-ud-overlay").classList.remove("open");
   document.body.style.overflow="";
   showEditToast("\u2705 UD mise à jour");
@@ -3262,15 +3309,15 @@ function editULSave(){
       break;
     }
   }
-  if(!EDITS.ul_data)EDITS.ul_data={};
-  if(!EDITS.ul_data[udCode])EDITS.ul_data[udCode]={};
+  if(!UDUL_EDITS.ul_data)UDUL_EDITS.ul_data={};
+  if(!UDUL_EDITS.ul_data[udCode])UDUL_EDITS.ul_data[udCode]={};
   for(var _i2=0;_i2<UD_DATA.length;_i2++){
     if(UD_DATA[_i2].code==udCode){
-      EDITS.ul_data[udCode][ulIdx]=UD_DATA[_i2].uls[ulIdx];
+      UDUL_EDITS.ul_data[udCode][ulIdx]=UD_DATA[_i2].uls[ulIdx];
       break;
     }
   }
-  editsSave();
+  udulEditsSave();
   document.getElementById("edit-ul-overlay").classList.remove("open");
   document.body.style.overflow="";
   showEditToast("\u2705 UL mise à jour");
