@@ -6427,8 +6427,9 @@ function _mergeEdits(local, remote) {
   if (!remote) return local;
   if (!local)  return remote;
   var out = { structs:{}, contacts:{}, adherents:{}, new_structs:[], notes:{} };
-  /* structs, contacts, notes : objets {siret: val} — le local gagne */
-  var objKeys = ['structs','contacts','notes'];
+  /* structs, contacts, notes, ud_data : objets {clé: val} — le local gagne */
+  /* ul_data : objet {udCode: {idx: val}} — le local gagne à chaque index */
+  var objKeys = ['structs','contacts','notes','ud_data'];
   for (var oi=0; oi<objKeys.length; oi++) {
     var k = objKeys[oi];
     var loc = local[k]  || {};
@@ -6464,6 +6465,25 @@ function _mergeEdits(local, remote) {
   for (var i=0; i<locNS.length; i++) { if(locNS[i]&&locNS[i].si){seen[locNS[i].si]=1; merged.push(locNS[i]);} }
   for (var i=0; i<remNS.length; i++) { if(remNS[i]&&remNS[i].si&&!seen[remNS[i].si]){ merged.push(remNS[i]); } }
   out.new_structs = merged;
+  /* ul_data : {udCode: {idx: {champ:val}}} — merge à deux niveaux, local gagne */
+  var locUL = local.ul_data  || {};
+  var remUL = remote.ul_data || {};
+  if(Object.keys(locUL).length || Object.keys(remUL).length){
+    out.ul_data = {};
+    var allUDC = {};
+    var _uk; for(_uk in remUL) allUDC[_uk]=1; for(_uk in locUL) allUDC[_uk]=1;
+    for(_uk in allUDC){
+      out.ul_data[_uk] = {};
+      var remIdx = remUL[_uk] || {};
+      var locIdx = locUL[_uk] || {};
+      var allIdx = {};
+      var _ui; for(_ui in remIdx) allIdx[_ui]=1; for(_ui in locIdx) allIdx[_ui]=1;
+      for(_ui in allIdx){
+        /* remote d'abord, local écrase */
+        out.ul_data[_uk][_ui] = Object.assign({}, remIdx[_ui]||{}, locIdx[_ui]||{});
+      }
+    }
+  }
   return out;
 }
 
