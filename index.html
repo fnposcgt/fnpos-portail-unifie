@@ -1986,11 +1986,14 @@ function goView(id, evt) {
     RS         = ACI_RS;
     ADHERENTS  = ACI_ADHERENTS;
     REPR_DATA  = REPR_DATA_ACI;
+    colorMode  = 'winner';
   } else if (id === 'ml') {
     STRUCTS    = ML_STRUCTS;
     RS         = ML_RS;
     ADHERENTS  = ML_ADHERENTS;
     REPR_DATA  = REPR_DATA_ML;
+    /* ML n'a pas de données d'inscrits dans RS → mode "structures" par défaut */
+    colorMode  = 'structures';
   }
 
   /* Swap config */
@@ -4726,6 +4729,11 @@ function _addCntLabel(latLng,txt){
 }
 function drawMap(){
   if(typeof L==="undefined"){setTimeout(drawMap,300);return;}
+  /* Sync colorMode buttons with current state */
+  var _cw=document.getElementById("cb-win"),_cp=document.getElementById("cb-par"),_cs=document.getElementById("cb-str");
+  if(_cw)_cw.classList.toggle("on",colorMode==="winner");
+  if(_cp)_cp.classList.toggle("on",colorMode==="participation");
+  if(_cs)_cs.classList.toggle("on",colorMode==="structures");
   _initLfMap();
   if(!_lfMap)return;
   _clearLfLabels();
@@ -4777,7 +4785,7 @@ function _renderRegLayer(gj){
             if(dk.insc>0)html+=' &bull; '+fmt(dk.insc)+' inscrits &bull; '+dk.part+'% part.';
             else html+=' &bull; pas d&rsquo;élections';
             html+='</div>';
-          }else{html+='<div style="color:var(--tx3)">Pas de données ACI</div>';}
+          }else{html+='<div style="color:var(--tx3)">Aucune structure dans ce secteur</div>';}
           if(ai){html+='<div style="color:#E24B4A;font-weight:700;margin-top:3px">🔴 '+ai.total+' adhérent'+(ai.total>1?'s':'')+' CGT</div>';}
           showTip(e.originalEvent,html);
         },
@@ -4913,7 +4921,7 @@ function _renderDeptLayer(gj){
           e.target.setStyle({weight:3,color:"#333"});
           var html='<div class="tn">Dép. '+code+' &mdash; '+nom+'</div>';
           if(dk){html+='<div>'+dk.count+' structure'+(dk.count>1?'s':'')+'</div>';}
-          else{html+='<div style="color:var(--tx3)">Pas de données ACI</div>';}
+          else{html+='<div style="color:var(--tx3)">Aucune structure dans ce département</div>';}
           if(ai){html+='<div style="color:#E24B4A;font-weight:700;margin-top:3px">🔴 '+ai.total+' adhérent'+(ai.total>1?'s':'')+'</div>';}
           showTip(e.originalEvent,html);
         },
