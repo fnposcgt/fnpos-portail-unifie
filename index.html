@@ -1026,22 +1026,11 @@ function tryBiometric(){
 </div>
   <div id="portal-main">
     <main style="max-width:1100px;margin:0 auto;padding:24px 20px 60px">
-  <div class="hero-stats" id="hero-stats">
-    <div class="stat-card">
-      <div class="stat-num" id="stat-sectors-live">2</div>
-      <div class="stat-lbl">Secteurs actifs</div>
-      <div class="stat-src">sur 8 en préparation</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num" id="stat-adh-aci">—</div>
-      <div class="stat-lbl">Adhérents ACI</div>
-      <div class="stat-src" id="stat-adh-aci-ts">sync en cours…</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num" id="stat-adh-total">—</div>
-      <div class="stat-lbl">Total adhérents</div>
-      <div class="stat-src">Secteur ACI</div>
-    </div>
+  <!-- éléments cachés conservés pour compatibilité JS -->
+  <div id="hero-stats" style="display:none">
+    <span id="stat-sectors-live"></span>
+    <span id="stat-adh-aci"></span><span id="stat-adh-aci-ts"></span>
+    <span id="stat-adh-total"></span>
   </div>
 
   <!-- SECTEURS ACTIFS -->
