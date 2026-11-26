@@ -7888,6 +7888,15 @@ window.addEventListener('hashchange', function() {
       }
     }
 
+    /* UD / UL CGT */
+    var udHtml = (s.cp || s.ad) ? renderUDBlock(s.cp || s.ad) : '';
+    if(udHtml){
+      h += '<div style="padding:14px 20px 0">';
+      h += '<div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">UD &amp; UL CGT</div>';
+      h += udHtml;
+      h += '</div>';
+    }
+
     /* Carte mini si lat/lon */
     if(s.la && s.lo){
       h += '<div style="padding:14px 20px 0">';
