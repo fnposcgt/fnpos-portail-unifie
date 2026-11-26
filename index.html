@@ -2433,11 +2433,63 @@ function udulEditsLoad(){
     var _raw=localStorage.getItem(UDUL_EDIT_KEY);
     if(_raw) UDUL_EDITS=JSON.parse(_raw);
   }catch(e){ UDUL_EDITS={ud_data:{},ul_data:{}}; }
+  /* Fusionner aussi depuis EDITS du secteur courant (arriv\u00e9 via syncPull Supabase) */
+  try{
+    if(typeof EDIT_KEY!=='undefined' && EDIT_KEY){
+      var _ce=_lsGet(EDIT_KEY)||{};
+      var _chg=false;
+      if(_ce.ul_data){
+        var _ulk=Object.keys(_ce.ul_data);
+        for(var _i=0;_i<_ulk.length;_i++){
+          var _udk=_ulk[_i];
+          if(!UDUL_EDITS.ul_data[_udk])UDUL_EDITS.ul_data[_udk]={};
+          var _ili=Object.keys(_ce.ul_data[_udk]);
+          for(var _j=0;_j<_ili.length;_j++){
+            if(UDUL_EDITS.ul_data[_udk][_ili[_j]]===undefined){
+              UDUL_EDITS.ul_data[_udk][_ili[_j]]=_ce.ul_data[_udk][_ili[_j]];_chg=true;
+            }
+          }
+        }
+      }
+      if(_ce.ud_data){
+        var _udkk=Object.keys(_ce.ud_data);
+        for(var _i2=0;_i2<_udkk.length;_i2++){
+          if(UDUL_EDITS.ud_data[_udkk[_i2]]===undefined){
+            UDUL_EDITS.ud_data[_udkk[_i2]]=_ce.ud_data[_udkk[_i2]];_chg=true;
+          }
+        }
+      }
+      if(_chg)localStorage.setItem(UDUL_EDIT_KEY,JSON.stringify(UDUL_EDITS));
+    }
+  }catch(e){ console.log('[UDUL] merge depuis EDITS:',e); }
   udulEditsApply();
 }
 function udulEditsSave(){
   try{ localStorage.setItem(UDUL_EDIT_KEY, JSON.stringify(UDUL_EDITS)); }
   catch(e){ showEditToast("\u26a0 Impossible de sauvegarder UD/UL", "#E24B4A"); }
+  /* Propager ul_data/ud_data dans EDITS secteur courant \u2192 syncPush vers Supabase */
+  try{
+    if(typeof EDIT_KEY!=='undefined' && EDIT_KEY && typeof _lsGet==='function'){
+      var _se=_lsGet(EDIT_KEY)||{structs:{},contacts:{},adherents:{},new_structs:[],notes:{}};
+      if(UDUL_EDITS.ul_data && Object.keys(UDUL_EDITS.ul_data).length){
+        if(!_se.ul_data)_se.ul_data={};
+        var _ulks=Object.keys(UDUL_EDITS.ul_data);
+        for(var _ui=0;_ui<_ulks.length;_ui++){
+          var _uk=_ulks[_ui];
+          if(!_se.ul_data[_uk])_se.ul_data[_uk]={};
+          var _ids=Object.keys(UDUL_EDITS.ul_data[_uk]);
+          for(var _ui2=0;_ui2<_ids.length;_ui2++)_se.ul_data[_uk][_ids[_ui2]]=UDUL_EDITS.ul_data[_uk][_ids[_ui2]];
+        }
+      }
+      if(UDUL_EDITS.ud_data && Object.keys(UDUL_EDITS.ud_data).length){
+        if(!_se.ud_data)_se.ud_data={};
+        var _udks=Object.keys(UDUL_EDITS.ud_data);
+        for(var _ui3=0;_ui3<_udks.length;_ui3++)_se.ud_data[_udks[_ui3]]=UDUL_EDITS.ud_data[_udks[_ui3]];
+      }
+      _lsSet(EDIT_KEY,_se);
+      if(typeof syncPush==='function') syncPush();
+    }
+  }catch(e){ console.log('[UDUL] sync Supabase:',e); }
 }
 var FILTER_IDS=['fsearch','freg','fccn','fsyn','fpar','tf-n','tf-r','tf-cp','tf-v','tf-si','tf-cc','tf-in-min','tf-in-max','tf-pa-min','tf-pa-max','tf-ga','tf-de','tf-pr','tf-tl','tf-adh','tf-cq','cq-search','cq-reg-filter','cq-aci-filter','cq-st-filter'];
 function filtersSave(){
