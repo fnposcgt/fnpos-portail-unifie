@@ -8394,6 +8394,49 @@ window.addEventListener('hashchange', function() {
   </div>
 </div>
 
+<!-- ===== MODIFIER UNE UD ===== -->
+<div id="edit-ud-overlay" class="edit-overlay" onclick="editUDClose(event)">
+  <div class="edit-modal">
+    <div class="edit-modal-hdr"><span class="edit-modal-title" id="eud-title">Modifier la UD</span><button class="btn-cancel" onclick="editUDClose(null)">&#10005;</button></div>
+    <div class="edit-modal-body">
+      <input type="hidden" id="eud-code">
+      <div class="edit-field"><label>Nom de la UD</label><input id="eud-nom" type="text" placeholder="Union Départementale CGT de..."></div>
+      <div class="edit-field"><label>Adresse</label><input id="eud-adr" type="text" placeholder="Numéro et rue"></div>
+      <div class="edit-field-row"><div class="edit-field"><label>Code postal</label><input id="eud-cp" type="text" maxlength="5"></div><div class="edit-field"><label>Ville</label><input id="eud-ville" type="text"></div></div>
+      <div class="edit-field-row"><div class="edit-field"><label>Téléphone</label><input id="eud-tel" type="tel"></div><div class="edit-field"><label>Email</label><input id="eud-email" type="email"></div></div>
+      <div class="edit-field"><label>Site web</label><input id="eud-site" type="url" placeholder="https://..."></div>
+      <div class="edit-actions"><button class="btn-cancel" onclick="editUDClose(null)">Annuler</button><button class="btn-save" onclick="editUDSave()">Enregistrer</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODIFIER UNE UL ===== -->
+<div id="edit-ul-overlay" class="edit-overlay" onclick="editULClose(event)">
+  <div class="edit-modal">
+    <div class="edit-modal-hdr"><span class="edit-modal-title" id="eul-title">Modifier la UL</span><button class="btn-cancel" onclick="editULClose(null)">&#10005;</button></div>
+    <div class="edit-modal-body">
+      <input type="hidden" id="eul-ud-code"><input type="hidden" id="eul-idx">
+      <div class="edit-field"><label>Nom de la UL</label><input id="eul-nom" type="text" placeholder="Union Locale CGT de..."></div>
+      <div class="edit-field-row"><div class="edit-field"><label>Code postal</label><input id="eul-cp" type="text" maxlength="5"></div><div class="edit-field"><label>Ville</label><input id="eul-ville" type="text"></div></div>
+      <div class="edit-field-row"><div class="edit-field"><label>Téléphone</label><input id="eul-tel" type="tel"></div><div class="edit-field"><label>Email</label><input id="eul-email" type="email"></div></div>
+      <div class="edit-actions"><button class="btn-cancel" onclick="editULClose(null)">Annuler</button><button class="btn-save" onclick="editULSave()">Enregistrer</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODIFIER UN RESPONSABLE RÉGION ===== -->
+<div id="edit-resp-overlay" class="edit-overlay" onclick="editRespClose(event)">
+  <div class="edit-modal">
+    <div class="edit-modal-hdr"><span class="edit-modal-title">Responsable de région</span><button class="btn-cancel" onclick="editRespClose(null)">&#10005;</button></div>
+    <div class="edit-modal-body">
+      <input type="hidden" id="er-reg"><input type="hidden" id="er-ancien"><input type="hidden" id="er-idx">
+      <div class="edit-field"><label>Nom complet</label><input id="er-nom" type="text" placeholder="Prénom NOM"></div>
+      <div class="edit-field-row"><div class="edit-field"><label>Téléphone</label><input id="er-tel" type="tel"></div><div class="edit-field"><label>Email</label><input id="er-email" type="email"></div></div>
+      <div class="edit-actions"><button class="btn-cancel" onclick="editRespClose(null)">Annuler</button><button class="btn-save" onclick="editRespSave()">Enregistrer</button></div>
+    </div>
+  </div>
+</div>
+
 <!-- ===== VISIONNEUSE DOCUMENTS BIBLIOTHÈQUE ===== -->
 <div id="doc-viewer-overlay" onclick="closeDocViewer(event)">
   <div style="background:var(--bg);border-radius:12px;width:min(760px,96vw);max-height:90vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.35);overflow:hidden">
