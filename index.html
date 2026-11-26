@@ -2304,20 +2304,28 @@ function updateSectorStats(sector, row) {
   var totalStr = 0;
   if (row.edits) {
     var edits = row.edits;
-    /* Adhérents: priorité à kpi_adh, sinon comptage manuel */
-    if (typeof edits.kpi_adh === 'number') {
-      totalAdh = edits.kpi_adh;
-    } else if (edits.adherents && typeof edits.adherents === 'object') {
+    /* Adhérents: toujours compter depuis edits.adherents (source de vérité Supabase)
+       — on ignore kpi_adh qui peut être périmé suite à un push depuis un appareil avec moins d'adhérents */
+    if (edits.adherents && typeof edits.adherents === 'object') {
       var adhs = edits.adherents;
+      /* Dédupliquer par nom+prénom pour éviter doublons entre syndicats */
+      var seen = {};
       var skeys = Object.keys(adhs);
       for (var i = 0; i < skeys.length; i++) {
         var arr = adhs[skeys[i]];
         if (Array.isArray(arr)) {
           for (var j = 0; j < arr.length; j++) {
-            if (!arr[j]._deleted && arr[j].arc !== 'OUI') totalAdh++;
+            var a = arr[j];
+            if (!a._deleted && a.arc !== 'OUI') {
+              var key = (a.nom||'')+'|'+(a.prenom||'');
+              if (!seen[key]) { seen[key] = true; totalAdh++; }
+            }
           }
         }
       }
+    } else if (typeof edits.kpi_adh === 'number') {
+      /* Fallback si adherents absent (ancien format) */
+      totalAdh = edits.kpi_adh;
     }
     /* Structures suivies */
     if (edits.structs && typeof edits.structs === 'object') {
