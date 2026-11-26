@@ -6392,12 +6392,20 @@ function syncPush(onDone) {
   xhrGet.send();
 }
 function _syncDoPush(_edits, _syncTbl, _edKey, _cqKey, _blKey, onDone){
-  /* Mettre à jour le KPI adhérents — ne jamais diminuer (kpi peut inclure adhérents XLSX non dans edits.adherents) */
+  /* Mettre à jour le KPI adhérents.
+     Seul un appareil ayant chargé le fichier Excel (ADHERENTS_XLSX non vide) met à jour kpi_adh.
+     Un appareil sans Excel conserve la valeur existante — évite d'écraser le vrai total. */
   if(typeof getAdhCount==='function'){
     _edits = JSON.parse(JSON.stringify(_edits));
-    var _newKpi = getAdhCount();
-    var _prevKpi = typeof _edits.kpi_adh === 'number' ? _edits.kpi_adh : 0;
-    _edits.kpi_adh = Math.max(_newKpi, _prevKpi);
+    var _xlsxLoaded = typeof ADHERENTS_XLSX!=='undefined' && Array.isArray(ADHERENTS_XLSX) && ADHERENTS_XLSX.length > 0;
+    if(_xlsxLoaded){
+      /* Appareil avec Excel : on fait confiance à getAdhCount() (compte XLSX + adherents) */
+      _edits.kpi_adh = getAdhCount();
+    } else if(typeof _edits.kpi_adh !== 'number'){
+      /* Pas d'Excel et pas de kpi existant : fallback sur getAdhCount() */
+      _edits.kpi_adh = getAdhCount();
+    }
+    /* else : pas d'Excel + kpi existant → on le conserve tel quel */
   }
   /* Injecter ul_data/ud_data depuis UDUL_EDITS (sans toucher localStorage) */
   try{
