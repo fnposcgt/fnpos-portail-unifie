@@ -367,6 +367,9 @@ body.readonly .em-ejs-config{display:none!important}
 body.readonly .export-zone{display:none!important}
 body.readonly #btn-new-adh-global{display:none!important}
 body.readonly .btn-del-icon{display:none!important}
+body.readonly #tab-btn-adherents{display:none!important}
+body.readonly #tp-adherents{display:none!important}
+body.readonly .doc-viewer-btn{display:none!important}
 #edit-toast{display:none;position:fixed;bottom:60px;left:50%;transform:translateX(-50%);padding:8px 18px;border-radius:20px;color:#fff;font-size:12px;font-weight:600;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.25)}
 
 
@@ -1077,7 +1080,7 @@ function tryBiometric(){
   <button class="nb" onclick="goTab('syndicats')">&#128202; Syndicats</button>
   <button class="nb" onclick="goTab('outils')">&#9881;&#65039; Outils</button>
   <button class="nb" onclick="goTab('emailing')">&#9993; Emailing</button>
-  <button class="nb" onclick="goTab('adherents')">&#127978; Adh&#233;rents</button>
+  <button id="tab-btn-adherents" class="nb" onclick="goTab('adherents')">&#127978; Adh&#233;rents</button>
   <button class="nb" onclick="goTab('secteur')">&#127960;&#65039; Secteur</button>
   <button class="nb" onclick="goTab('federation')">&#127978; F&#233;d&#233;ration</button>
   <a class="nb" href="index.html" style="text-decoration:none">&#127968; Portail</a>
@@ -4315,6 +4318,7 @@ function closeDocViewer(evt){
   document.body.style.overflow='';
 }
 function printDoc(){
+  if(IS_READONLY) return;
   var doc=DOCS[DOC_CURRENT_ID];
   if(doc){
     var css='body{font-family:Arial,sans-serif;font-size:13px;max-width:720px;margin:30px auto;line-height:1.7;color:#1a1a18}'+
